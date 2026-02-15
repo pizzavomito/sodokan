@@ -19,14 +19,9 @@ static func is_box(node) -> bool:
 	return node.has_method("push")
 
 static func is_target(node) -> bool:
-	return (
-		node is Node2D 
-		and not is_box(node) 
-		and node.name != "Player" 
-		and not node is TileMapLayer 
-		and not node.name.begins_with("Teleporter") 
-		and not node.name.begins_with("Door")
-	)
+	# Utilise les groupes Godot pour identifier les targets
+	# Tous les objets "target" doivent être ajoutés au groupe "targets"
+	return node.is_in_group("targets")
 	
 static func get_object_at(parent: Node, pos: Vector2, method_name: String):
 	var tile_pos = pos_to_tile(pos)

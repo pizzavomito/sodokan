@@ -38,17 +38,12 @@ func attempt_move(direction, animation_name):
 func move(direction, animation_name):
 	if is_moving:
 		return
-	
+
 	last_direction = direction
 	is_moving = true
-	
-	# SAUVEGARDE L'ÉTAT AVANT DE BOUGER
-	var level = get_parent().get_parent()
-	if level and level.has_method("save_state"):
-		level.save_state()
-	
+
 	var target_pos = position + direction * GameUtils.TILE_SIZE
-	
+
 	# Vérifie s'il y a un mur à la position cible
 	if has_wall_at(target_pos):
 		is_moving = false
@@ -82,14 +77,25 @@ func move(direction, animation_name):
 	# Anime le déplacement du joueur avec un tween (interpolation)
 	var tween = create_tween()
 	tween.tween_property(self, "position", target_pos, 0.15)
-	tween.finished.connect(func(): 
+	tween.finished.connect(func():
 		is_moving = false
 		$AnimatedSprite2D.frame = 0
 		$AnimatedSprite2D.pause()
-		
-		check_teleporter()
+
+		# Attends que tout soit en place (caisses, etc)
+		await get_tree().process_frame
+
+		# Vérifie les interactions (téléportation est asynchrone !)
+		await check_teleporter()
 		check_door()
-		check_life_pickup()  # ← NOUVEAU
+		check_life_pickup()
+		check_undo_pickup()
+		check_secret_wall()
+
+		# ← SAUVEGARDE L'ÉTAT APRÈS TOUTES LES INTERACTIONS (notamment téléportation)
+		var level = get_parent().get_parent()
+		if level and level.has_method("save_state"):
+			level.save_state()
 	)
 
 func check_life_pickup():
@@ -101,7 +107,7 @@ func check_life_pickup():
 			
 			if life_tile == tile_pos:
 				# Vérifie que la vie n'a pas déjà été collectée
-				if not node.is_collected:  # ← Vérifie le flag
+				if not node.is_collected:
 					collect_life(node)
 				return
 
@@ -119,6 +125,27 @@ func collect_life(life_node):
 		
 		# Effet de collecte
 		life_node.collect()
+
+func check_undo_pickup():
+	var tile_pos = GameUtils.pos_to_tile(position)
+	
+	for node in get_parent().get_children():
+		if node.name == "UndoPickup":
+			var undo_tile = GameUtils.pos_to_tile(node.position)
+			
+			if undo_tile == tile_pos:
+				if not node.is_collected:
+					collect_undo(node)
+				return
+
+func collect_undo(undo_node):
+	var level = get_parent().get_parent()
+	if level:
+		SaveManager.collect_undo(undo_node.level_id)
+		level.update_undos_display()
+		print("Undo collecté ! Total : ", SaveManager.current_undos)
+		
+		undo_node.collect()
 		
 func has_wall_at(pos):
 	var tile_pos = GameUtils.pos_to_tile(pos)
@@ -132,8 +159,8 @@ func has_wall_at(pos):
 	return false
 
 func check_teleporter():
-	# Utilise le système de téléportation factorisé
-	GameUtils.check_and_teleport(self, last_direction)  # ← Passe la direction
+	# Utilise le système de téléportation factorisé (fonction asynchrone)
+	await GameUtils.check_and_teleport(self, last_direction)
 	
 func check_door():
 	var tile_pos = GameUtils.pos_to_tile(position)
@@ -149,6 +176,18 @@ func check_door():
 
 func enter_door():
 	# Entre dans la porte et passe au niveau suivant
-	var level = get_parent().get_parent()  # Remonte à Level
+	var level = get_parent().get_parent()
 	if level:
 		level.player_entered_door()
+
+func check_secret_wall():
+	var tile_pos = GameUtils.pos_to_tile(position)
+
+	for node in get_parent().get_children():
+		if node.name.begins_with("SecretWall"):
+			var wall_tile = GameUtils.pos_to_tile(node.position)
+
+			if wall_tile == tile_pos:
+				if not node.is_revealed:
+					node.reveal()
+				return

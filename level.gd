@@ -7,6 +7,8 @@ const TELEPORTER_SCENE = preload("res://teleporter.tscn")
 const PARTICLES_SCENE = preload("res://victory_particles.tscn")
 const DOOR_SCENE = preload("res://door.tscn")
 const LIFE_PICKUP_SCENE = preload("res://life_pickup.tscn")
+const UNDO_PICKUP_SCENE = preload("res://undo_pickup.tscn")
+const SECRET_WALL_SCENE = preload("res://secret_wall.tscn")
 
 # Sons de sifflement aléatoires
 var whistle_sounds = [
@@ -40,9 +42,9 @@ var previous_boxes_on_targets = 0
 var lives = 3  # ← NOUVEAU : nombre de vies
 var checkpoint_level = 0
 # Système Undo
-var undo_history = []  # ← NOUVEAU : historique des états
-var max_undo = 20  # ← Limite d'undo
-
+var undo_history = []  # ← Array pour stocker l'historique
+var max_undo_steps = 10  # ← Max 10 étapes
+var currently_saving = false
 var whistle_timer = 0.0
 var next_whistle_delay = 0.0
 
@@ -68,6 +70,7 @@ func _ready():
 	
 	randomize()
 	schedule_next_whistle()
+	update_undos_display()
 	update_lives_display()
 	
 	# Fade in de la musique
@@ -77,69 +80,96 @@ func save_state():
 	var container = get_node_or_null("LevelContainer")
 	if not container:
 		return
-	
+
 	var state = {
 		"player_pos": Vector2.ZERO,
 		"boxes": []
 	}
-	
-	# Sauvegarde position du joueur
+
 	var player = container.get_node_or_null("Player")
 	if player:
 		state["player_pos"] = player.position
-	
-	# Sauvegarde positions de toutes les caisses
+
 	for node in container.get_children():
 		if GameUtils.is_box(node):
 			state["boxes"].append({
 				"pos": node.position,
 				"color": node.color
 			})
-	
-	# Ajoute à l'historique
-	undo_history.append(state)
-	
-	# Limite la taille de l'historique
-	if undo_history.size() > max_undo:
-		undo_history.pop_front()  # Supprime le plus ancien
-	
-	print("État sauvegardé - Undo disponibles : ", undo_history.size())
+
+	# Vérifie que l'état est DIFFÉRENT du précédent
+	var is_different = true
+
+	if undo_history.size() > 0:
+		var prev_state = undo_history[undo_history.size() - 1]
+		if prev_state["player_pos"] == state["player_pos"] and prev_state["boxes"].size() == state["boxes"].size():
+			# Vérifie que les caisses n'ont pas bougé
+			var boxes_same = true
+			for i in range(state["boxes"].size()):
+				if state["boxes"][i]["pos"] != prev_state["boxes"][i]["pos"]:
+					boxes_same = false
+					break
+			is_different = not boxes_same
+
+	# N'ajoute à l'historique que si DIFFÉRENT
+	if is_different:
+		undo_history.append(state)
+
+		# Limite la taille : enlève le PLUS ANCIEN
+		if undo_history.size() > max_undo_steps:
+			undo_history.pop_front()
+
+		print("État sauvegardé - Total steps: ", undo_history.size())
+		update_undos_display()
+	else:
+		print("État identique au précédent, pas sauvegardé")
 
 func undo_move():
-	if undo_history.size() == 0:
-		print("Pas d'undo disponible")
+	if SaveManager.current_undos <= 0:
+		print("❌ Pas d'undo disponible !")
 		return
-	
-	# Retire le dernier état (l'état actuel)
-	if undo_history.size() > 0:
-		undo_history.pop_back()
-	
-	# Si plus d'états, on ne peut pas undo
-	if undo_history.size() == 0:
-		print("Début du niveau, impossible d'undo")
+
+	if undo_history.size() <= 1:
+		print("❌ Début du niveau, impossible d'undo")
 		return
-	
+
+	# Utilise un undo
+	SaveManager.use_undo()
+
+	# Retire le dernier état (état actuel)
+	undo_history.pop_back()
+
 	# Récupère l'état précédent
 	var state = undo_history[undo_history.size() - 1]
-	
+	print("🔙 Undo - Retour à l'état ", undo_history.size() - 1)
+
 	var container = get_node_or_null("LevelContainer")
 	if not container:
 		return
-	
-	# Restaure position du joueur
+
+	# Restaure joueur
 	var player = container.get_node_or_null("Player")
 	if player:
+		print("   Joueur: ", state["player_pos"])
 		player.position = state["player_pos"]
-	
-	# Restaure positions des caisses
+
+	# Restaure caisses dans le bon ordre
 	var box_index = 0
 	for node in container.get_children():
 		if GameUtils.is_box(node):
 			if box_index < state["boxes"].size():
+				print("   Caisse ", box_index, ": ", state["boxes"][box_index]["pos"])
 				node.position = state["boxes"][box_index]["pos"]
 				box_index += 1
-	
-	print("Undo effectué - Undo restants : ", undo_history.size())
+
+	update_undos_display()
+
+	# Force check_win après undo
+	checking_win = false
+	await get_tree().process_frame
+	checking_win = true
+
+	print("✅ Undo effectué - Undos restants : ", SaveManager.current_undos)
 		
 func fade_in_music():
 	var music = get_node_or_null("BackgroundMusic")
@@ -174,7 +204,10 @@ func load_level(level_index):
 	
 	checking_win = false
 	previous_boxes_on_targets = 0
-	undo_history.clear()  # ← NOUVEAU : vide l'historique
+
+	# ← IMPORTANT : Réinitialise correctement
+	undo_history.clear()
+	currently_saving = false  # ← Reset le flag aussi
 	
 	clear_level()
 	await get_tree().process_frame
@@ -192,14 +225,38 @@ func load_level(level_index):
 			
 			# Place les éléments selon le caractère
 			match char:
+				"!":  # Undo
+					var ground_layer = container.get_node_or_null("Ground")
+					if ground_layer:
+						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
+
+					# Ne spawn que si pas déjà collecté
+					if not SaveManager.is_undo_collected(current_level):
+						spawn_undo_pickup(pos)
+
+				"~":  # Undo caché (easter egg)
+					var ground_layer = container.get_node_or_null("Ground")
+					if ground_layer:
+						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
+
+					if not SaveManager.is_undo_collected(current_level):
+						spawn_hidden_undo_pickup(pos, 0)  # Zone 0
 				"+":  # Vie
 					var ground_layer = container.get_node_or_null("Ground")
 					if ground_layer:
 						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
-					
+
 					# Ne spawn que si pas déjà collectée
 					if not SaveManager.is_life_collected(current_level):
 						spawn_life_pickup(pos)
+
+				"^":  # Vie cachée (easter egg)
+					var ground_layer = container.get_node_or_null("Ground")
+					if ground_layer:
+						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
+
+					if not SaveManager.is_life_collected(current_level):
+						spawn_hidden_life_pickup(pos, 0)  # Zone 0
 				"#", "&", "@", "%":  # Murs variés
 					var ground_layer = container.get_node_or_null("Ground")
 					if ground_layer:
@@ -233,7 +290,13 @@ func load_level(level_index):
 					if ground_layer:
 						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
 					spawn_door(pos)
-				
+
+				"$":  # Mur secret (easter egg)
+					var ground_layer = container.get_node_or_null("Ground")
+					if ground_layer:
+						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
+					spawn_secret_wall(pos, 0)  # Zone 0 par défaut
+
 				# === CAISSES ===
 				"R":  # Caisse rouge
 					var ground_layer = container.get_node_or_null("Ground")
@@ -310,16 +373,18 @@ func load_level(level_index):
 					spawn_teleporter(pos, 2, 1)
 				
 		
-	# Centre le niveau à l'écran
 	center_level()
-	# Change la musique tous les 10 niveaux
 	change_music_for_level(level_index)
 	
-	# ATTEND une frame supplémentaire que tout soit bien en place
 	await get_tree().process_frame
 	
-	# RÉACTIVE check_win
+	# ← IMPORTANT : Sauvegarde l'ÉTAT INITIAL du niveau
+	# (utile pour faire undo sur le premier mouvement)
+	save_state()
+	
 	checking_win = true
+
+	
 
 func center_level():
 	# Décale le conteneur pour centrer le niveau
@@ -353,11 +418,48 @@ func clear_level():
 	if ground_layer:
 		ground_layer.clear()
 	
-	# Supprime caisses, cibles, téléporteurs ET porte
+	# Supprime caisses, cibles, téléporteurs, porte ET murs secrets
 	for child in container.get_children():
-		if GameUtils.is_box(child) or GameUtils.is_target(child) or child.name.begins_with("Teleporter") or child.name.begins_with("Door") or child.name == "LifePickup":  # ← Ajoute LifePickup
+		if (GameUtils.is_box(child) or GameUtils.is_target(child) or
+			child.name.begins_with("Teleporter") or child.name.begins_with("Door") or
+			child.name == "LifePickup" or child.name == "UndoPickup" or
+			child.name.begins_with("SecretWall")):
 			child.queue_free()
 
+
+func spawn_undo_pickup(pos):
+	var undo_pickup = UNDO_PICKUP_SCENE.instantiate()
+	undo_pickup.name = "UndoPickup"
+	undo_pickup.position = pos + Vector2(32, 32)
+	undo_pickup.level_id = current_level
+	get_node("LevelContainer").add_child(undo_pickup)
+
+func spawn_hidden_undo_pickup(pos, zone_id: int = 0):
+	var undo_pickup = UNDO_PICKUP_SCENE.instantiate()
+	undo_pickup.name = "UndoPickup"
+	undo_pickup.position = pos + Vector2(32, 32)
+	undo_pickup.level_id = current_level
+
+	# Crée un sprite de faux mur qui remplace visuellement l'objet
+	var fake_wall = Sprite2D.new()
+	fake_wall.texture = preload("res://assets/Blocks/block_02.png")
+	fake_wall.centered = false  # Comme les vrais murs
+	fake_wall.position = Vector2(-32, -32)  # Aligne avec la case
+	fake_wall.z_index = 20  # Au-dessus de tout
+	fake_wall.name = "FakeWall"
+	undo_pickup.add_child(fake_wall)
+
+	# Cache le sprite de l'objet (le fake_wall sera visible à la place)
+	var sprite = undo_pickup.get_node_or_null("Sprite2D")
+	if sprite:
+		sprite.visible = false
+
+	# Marque comme caché
+	undo_pickup.set_meta("hidden", true)
+	undo_pickup.set_meta("secret_zone_id", zone_id)
+
+	get_node("LevelContainer").add_child(undo_pickup)
+	print("Undo caché créé dans la zone ", zone_id)
 
 func spawn_life_pickup(pos):
 	var life = LIFE_PICKUP_SCENE.instantiate()
@@ -365,6 +467,33 @@ func spawn_life_pickup(pos):
 	life.position = pos + Vector2(32, 32)  # ← Centre dans la case
 	life.level_id = current_level
 	get_node("LevelContainer").add_child(life)
+
+func spawn_hidden_life_pickup(pos, zone_id: int = 0):
+	var life = LIFE_PICKUP_SCENE.instantiate()
+	life.name = "LifePickup"
+	life.position = pos + Vector2(32, 32)
+	life.level_id = current_level
+
+	# Crée un sprite de faux mur qui remplace visuellement l'objet
+	var fake_wall = Sprite2D.new()
+	fake_wall.texture = preload("res://assets/Blocks/block_02.png")
+	fake_wall.centered = false  # Comme les vrais murs
+	fake_wall.position = Vector2(-32, -32)  # Aligne avec la case
+	fake_wall.z_index = 10
+	fake_wall.name = "FakeWall"
+	life.add_child(fake_wall)
+
+	# Cache le sprite de l'objet (le fake_wall sera visible à la place)
+	var sprite = life.get_node_or_null("Sprite2D")
+	if sprite:
+		sprite.visible = false
+
+	# Marque comme caché
+	life.set_meta("hidden", true)
+	life.set_meta("secret_zone_id", zone_id)
+
+	get_node("LevelContainer").add_child(life)
+	print("Vie cachée créée dans la zone ", zone_id)
 	
 func spawn_door(pos):
 	var door = DOOR_SCENE.instantiate()
@@ -389,6 +518,7 @@ func spawn_target(pos, color = "red"):
 	target.position = pos
 	get_node("LevelContainer").add_child(target)
 	target.set_color(color)
+	target.add_to_group("targets")  # Ajoute au groupe pour is_target()
 
 func spawn_teleporter(pos, teleporter_id: int, linked_id: int):
 	var teleporter = TELEPORTER_SCENE.instantiate()
@@ -396,6 +526,39 @@ func spawn_teleporter(pos, teleporter_id: int, linked_id: int):
 	get_node("LevelContainer").add_child(teleporter)
 	teleporter.name = "Teleporter_" + str(teleporter_id)
 	teleporter.initialize(teleporter_id, linked_id)
+
+func spawn_secret_wall(pos, zone_id: int = 0):
+	var secret_wall = SECRET_WALL_SCENE.instantiate()
+	secret_wall.position = pos
+	secret_wall.secret_zone_id = zone_id
+	secret_wall.name = "SecretWall_" + str(zone_id)
+	get_node("LevelContainer").add_child(secret_wall)
+
+func reveal_secret_zone(zone_id: int):
+	# Révèle tous les objets cachés de cette zone
+	var container = get_node_or_null("LevelContainer")
+	if not container:
+		return
+
+	for node in container.get_children():
+		# Si l'objet a un flag "hidden" et appartient à cette zone
+		if node.has_meta("hidden") and node.get_meta("hidden"):
+			if node.has_meta("secret_zone_id") and node.get_meta("secret_zone_id") == zone_id:
+				# Fade out du faux mur
+				var fake_wall = node.get_node_or_null("FakeWall")
+				if fake_wall:
+					var tween = create_tween()
+					tween.tween_property(fake_wall, "modulate:a", 0.0, 0.5)
+					tween.finished.connect(fake_wall.queue_free)
+
+				# Rend le sprite de l'objet visible
+				var sprite = node.get_node_or_null("Sprite2D")
+				if sprite:
+					sprite.visible = true
+					node.start_animation()
+
+				node.set_meta("hidden", false)
+				print("   Révélé : ", node.name)
 
 func _process(delta):
 	# Vérifie à chaque frame si le niveau est gagné (seulement si activé)
@@ -406,6 +569,10 @@ func _process(delta):
 	whistle_timer += delta
 	if whistle_timer >= next_whistle_delay:
 		play_random_whistle()
+
+	# ← DEBUG (commenter après tests)
+	#if undo_history.size() > 0:
+	#	print("Undo history size: ", undo_history.size())
 
 func check_win():
 	var container = get_node_or_null("LevelContainer")
@@ -468,14 +635,9 @@ func check_win():
 			if sound:
 				sound.play()
 			
-			# Particules
-			for target in container.get_children():
-				if GameUtils.is_target(target) and "color" in target:
-					var target_tile = GameUtils.pos_to_tile(target.position)
-					spawn_victory_particles(target_tile)
-			
 			# Ouvre la porte
 			door.open()
+			spawn_victory_particles(GameUtils.pos_to_tile(door.position))
 	else:
 		# Sinon, si la porte était ouverte → REFERME-LA
 		if door and door.is_open:
@@ -520,7 +682,15 @@ func player_entered_door():
 	previous_boxes_on_targets = 0  # Reset
 	await get_tree().create_timer(0.5).timeout
 	next_level()
-	
+
+func update_undos_display():
+	var undos_label = get_node_or_null("CanvasLayer/UndosLabel")
+	if undos_label:
+		var undos = ""
+		for i in range(SaveManager.current_undos):
+			undos += "💎"
+		undos_label.text = undos
+
 func update_lives_display():
 	var lives_label = get_node_or_null("CanvasLayer/LivesLabel")
 	if lives_label:
@@ -533,15 +703,19 @@ func next_level():
 	current_level += 1
 	SaveManager.update_level(current_level)
 	
-	# Si on passe à un nouveau palier de 10 niveaux → nouveau checkpoint
+	# ← NOUVEAU : +1 undo quand on passe un niveau
+	SaveManager.add_undo()
+	
 	var new_checkpoint = int(current_level / 10) * 10
 	if new_checkpoint > checkpoint_level:
 		checkpoint_level = new_checkpoint
-		lives = 3  # Reset les vies au checkpoint
-		print("Nouveau checkpoint au niveau ", checkpoint_level, " - Vies réinitialisées")
+		lives = 3
+		SaveManager.reset_undos_at_checkpoint()  # ← NOUVEAU : reset undos
+		print("Nouveau checkpoint au niveau ", checkpoint_level, " - Undos reset à 1")
 	
 	load_level(current_level)
 	update_lives_display()
+	update_undos_display()  # ← NOUVEAU
 	await get_tree().process_frame
 	checking_win = true
 	
@@ -575,8 +749,10 @@ func restart_level():
 	undo_history.clear()
 	checking_win = false
 	previous_boxes_on_targets = 0
+	currently_saving = false
 	
 	update_lives_display()
+	update_undos_display()
 	
 	load_level(current_level)
 	await get_tree().process_frame
@@ -586,10 +762,16 @@ func _input(event):
 	# Touche Échap pour recommencer le niveau
 	if event.is_action_pressed("ui_cancel"):
 		restart_level()
-	
+
 	# Touche Z pour undo
-	if event.is_action_pressed("ui_undo"):  # ← NOUVEAU
+	if event.is_action_pressed("ui_undo"):
 		undo_move()
+
+	# Touche U pour ajouter un undo (debug/cheat)
+	if event is InputEventKey and event.pressed and event.keycode == KEY_U and not event.echo:
+		SaveManager.add_undo()
+		update_undos_display()
+		print("➕ Undo ajouté ! Total : ", SaveManager.current_undos)
 		
 func schedule_next_whistle():
 	# Prochaine sifflement entre 8 et 20 secondes

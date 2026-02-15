@@ -1,29 +1,24 @@
 extends Node2D
 
 var level_id : int = 0
-var is_collected : bool = false  # ← NOUVEAU flag
-var color = ""
+var is_collected : bool = false
 
 func _ready():
 	# Si l'objet est caché, ne pas lancer les animations
 	if get_meta("hidden", false):
 		return
-
+	# Animation de rotation continue
 	start_animation()
-	
+
 func collect():
 	if is_collected:
 		return
 	
 	is_collected = true
+	name = "UndoPickup_Collected"
 	
-	# Change le nom pour empêcher re-collecte
-	name = "LifePickup_Collected"
-	
-	# Cache le sprite
 	$Sprite2D.visible = false
 	
-	# Son
 	var sound = get_node_or_null("PickupSound")
 	if sound:
 		sound.play()

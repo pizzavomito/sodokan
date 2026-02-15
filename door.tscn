@@ -1,25 +1,27 @@
 [gd_scene format=3 uid="uid://cesgl2wuddntd"]
 
 [ext_resource type="Script" uid="uid://cgqpl65xbs6w" path="res://door.gd" id="1_0phs7"]
-[ext_resource type="Texture2D" uid="uid://8li7fqcntl4p" path="res://assets/Environment/platformPack_tile047.png" id="2_0phs7"]
+[ext_resource type="Texture2D" uid="uid://cnwgihtkqd0mb" path="res://assets/Environment/hole_large_end_locked.png" id="2_50cdl"]
 [ext_resource type="Texture2D" uid="uid://d3617k7f55npa" path="res://assets/Environment/environment_15.png" id="3_50cdl"]
-[ext_resource type="Texture2D" uid="uid://c6g4dnkltmrkh" path="res://assets/Environment/platformPack_tile046.png" id="4_50cdl"]
+[ext_resource type="Texture2D" uid="uid://dvin31hmoy8tv" path="res://assets/Environment/hole_large_end.png" id="4_y5njw"]
 
 [node name="Door" type="Node2D" unique_id=1988623561]
 script = ExtResource("1_0phs7")
 
 [node name="ClosedSprite" type="Sprite2D" parent="." unique_id=798465459]
 z_index = 1
-texture = ExtResource("2_0phs7")
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("2_50cdl")
 centered = false
-offset = Vector2(0.5, 0.5)
 
 [node name="HoleSprite" type="Sprite2D" parent="." unique_id=561619847]
+visible = false
 texture = ExtResource("3_50cdl")
 centered = false
 
 [node name="OpenSprite" type="Sprite2D" parent="." unique_id=1151349922]
 visible = false
 z_index = 1
-texture = ExtResource("4_50cdl")
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("4_y5njw")
 centered = false

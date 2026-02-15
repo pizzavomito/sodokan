@@ -11,8 +11,11 @@ func _on_play_pressed():
 	get_tree().change_scene_to_file("res://level.tscn")
 
 func _on_reset_pressed():
-	# Remet la progression à zéro
-	SaveManager.last_level_reached = 4
+	# Remet toute la progression à zéro
+	SaveManager.last_level_reached = 7
+	SaveManager.collected_lives = []
+	SaveManager.collected_undos = []
+	SaveManager.current_undos = 1
 	SaveManager.save_game()
 	# Lance depuis le niveau 1
 	get_tree().change_scene_to_file("res://level.tscn")
