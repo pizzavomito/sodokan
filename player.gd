@@ -63,16 +63,20 @@ func move(direction, animation_name):
 		if box.is_pushing:
 			is_moving = false
 			return
-		
+
 		# Vérifie si la caisse peut être poussée (pas de mur ou autre caisse derrière)
 		var box_target = box.position + direction * GameUtils.TILE_SIZE
 		if has_wall_at(box_target) or GameUtils.get_object_at(get_parent(), box_target, "push"):
 			is_moving = false
 			return
-		
+
 		# Pousse la caisse
 		$PushSound.play()
 		box.push(direction)
+
+		# ← NOUVEAU : Vérifie si c'est une caisse radioactive
+		if box.is_radioactive:
+			await check_radioactive_hit()
 	else:
 		# Pas de caisse : joue le son de marche
 		$WalkSound.play()
@@ -224,8 +228,9 @@ func push_box_in_direction(direction):
 		await push_box_chain(box, direction)
 		is_pushing = false
 
-func push_box_chain(box, direction):
+func push_box_chain(box, direction, is_direct_push = true):
 	# Pousse une caisse et continue récursivement si elle rencontre une autre caisse
+	# is_direct_push: true = poussée directe par le joueur, false = poussée indirecte
 	if box.is_pushing:
 		return
 
@@ -240,12 +245,19 @@ func push_box_chain(box, direction):
 	var next_box = GameUtils.get_object_at(get_parent(), target_pos, "push")
 	if next_box and not next_box.is_pushing:
 		# Il y a une caisse devant, elle prend la relève
-		await push_box_chain(next_box, direction)
+		# Appel récursif avec is_direct_push = false (poussée indirecte)
+		await push_box_chain(next_box, direction, false)
 		# Cette caisse ne se déplace pas (elle s'arrête)
 		return
 
 	# Marque la caisse comme poussée
 	box.is_pushing = true
+
+	# Crée l'effet de poussière
+	box.create_dust_effect(direction, 0.15)
+
+	# Crée l'effet de vitesse (traînées fantômes)
+	box.create_speed_effect(0.15)
 
 	# Anime le déplacement
 	var tween = create_tween()
@@ -254,10 +266,30 @@ func push_box_chain(box, direction):
 
 	box.is_pushing = false
 
+	# ← NOUVEAU : Vérifie si c'est une caisse radioactive (SEULEMENT si poussée directe)
+	if is_direct_push and box.is_radioactive and not box.radioactive_checked:
+		box.radioactive_checked = true
+		await check_radioactive_hit()
+
+	# Vérifie les téléporteurs après le déplacement
+	var pos_before_tp = box.position
+	await GameUtils.check_and_teleport(box, last_direction)
+
+	# Si la caisse a été téléportée, arrête le glissement
+	if box.position != pos_before_tp:
+		return
+
 	# Continue le glissement avec la même caisse
-	await push_box_chain(box, direction)
+	await push_box_chain(box, direction, is_direct_push)
 
 	# Sauvegarde l'état après la poussée
 	var level = get_parent().get_parent()
 	if level and level.has_method("save_state"):
 		level.save_state()
+
+func check_radioactive_hit():
+	# ← NOUVEAU : Perd 1 PV en poussant une caisse radioactive
+	var level = get_parent().get_parent()
+	if level:
+		print("☢️ Contact avec caisse radioactive ! Perte de 1 PV")
+		await level.player_lose_life()

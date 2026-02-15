@@ -222,6 +222,11 @@ func load_level(level_index):
 	var level = levels_data[level_index]
 	var container = get_node("LevelContainer")
 
+	# Réinitialise les flags des caisses radioactives
+	for node in container.get_children():
+		if GameUtils.is_box(node):
+			node.radioactive_checked = false
+
 	# Parse la grille
 	for y in range(level.size()):
 		var line = level[y]
@@ -333,7 +338,13 @@ func load_level(level_index):
 					if ground_layer:
 						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
 					spawn_box(pos, "metal")
-				
+
+				"X":  # Caisse radioactive ← NOUVEAU
+					var ground_layer = container.get_node_or_null("Ground")
+					if ground_layer:
+						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
+					spawn_box(pos, "radioactive")
+
 				# === CIBLES ===
 				"r":  # Cible rouge
 					var ground_layer = container.get_node_or_null("Ground")
@@ -364,7 +375,13 @@ func load_level(level_index):
 					if ground_layer:
 						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
 					spawn_target(pos, "metal")
-				
+
+				"x":  # Cible radioactive ← NOUVEAU
+					var ground_layer = container.get_node_or_null("Ground")
+					if ground_layer:
+						ground_layer.set_cell(Vector2i(x, y), 0, Vector2i(0, 0))
+					spawn_target(pos, "radioactive")
+
 				# === TÉLÉPORTEURS ===
 				"1":  # Téléporteur 1
 					var ground_layer = container.get_node_or_null("Ground")
@@ -717,6 +734,38 @@ func fade_in_level(duration: float) -> void:
 		tween.tween_property(level_container, "modulate:a", 1.0, duration)
 		await tween.finished
 
+func animate_heart_loss():
+	# ← NOUVEAU : Animation des cœurs seulement (sans fade du level)
+	# Joue le son de perte de vie
+	var pop_player = get_node_or_null("PopPlayer")
+	if pop_player:
+		pop_player.stream = POP_SOUND
+		pop_player.play()
+
+	var lives_label = get_node_or_null("CanvasLayer/LivesLabel")
+	if lives_label:
+		# Sauvegarde la position originale
+		var original_y = lives_label.position.y
+
+		# Animation de perte de vie
+		var tween = create_tween()
+
+		# Shake vertical des cœurs (descend d'abord)
+		tween.tween_property(lives_label, "position:y", original_y + 10, 0.1)
+		tween.tween_property(lives_label, "position:y", original_y - 10, 0.1)
+		tween.tween_property(lives_label, "position:y", original_y, 0.1)
+
+		# Flash de couleur (blanc/rouge)
+		tween.parallel().tween_property(lives_label, "modulate", Color.WHITE, 0.15)
+		tween.tween_property(lives_label, "modulate", Color.RED, 0.15)
+		tween.tween_property(lives_label, "modulate", Color.WHITE, 0.15)
+
+		# Scale pulse
+		tween.parallel().tween_property(lives_label, "scale", Vector2(1.2, 1.2), 0.1)
+		tween.tween_property(lives_label, "scale", Vector2(1.0, 1.0), 0.1)
+
+		await tween.finished
+
 func animate_life_loss():
 	# Joue le son de perte de vie
 	var pop_player = get_node_or_null("PopPlayer")
@@ -729,13 +778,16 @@ func animate_life_loss():
 
 	var lives_label = get_node_or_null("CanvasLayer/LivesLabel")
 	if lives_label:
+		# Sauvegarde la position originale
+		var original_y = lives_label.position.y
+
 		# Animation de perte de vie
 		var tween = create_tween()
 
-		# Shake vertical des cœurs
-		tween.tween_property(lives_label, "position:y", lives_label.position.y - 10, 0.1)
-		tween.tween_property(lives_label, "position:y", lives_label.position.y + 10, 0.1)
-		tween.tween_property(lives_label, "position:y", lives_label.position.y, 0.1)
+		# Shake vertical des cœurs (descend d'abord)
+		tween.tween_property(lives_label, "position:y", original_y + 10, 0.1)
+		tween.tween_property(lives_label, "position:y", original_y - 10, 0.1)
+		tween.tween_property(lives_label, "position:y", original_y, 0.1)
 
 		# Flash de couleur (blanc/rouge)
 		tween.parallel().tween_property(lives_label, "modulate", Color.WHITE, 0.15)
@@ -853,6 +905,58 @@ func restart_level():
 	update_lives_display()
 	update_undos_display()
 	
+	load_level(current_level)
+	await get_tree().process_frame
+	checking_win = true
+
+func player_lose_life():
+	# ← NOUVEAU : Appelé quand le joueur pousse une caisse radioactive
+
+	# Perd une vie
+	lives -= 1
+	print("☢️ Perte de vie ! Vies restantes : ", lives)
+
+	# Met à jour l'affichage des cœurs AVANT l'animation
+	update_lives_display()
+
+	# Si le joueur a encore des vies, joue l'animation en arrière-plan et continue
+	if lives > 0:
+		print("Continue le niveau avec ", lives, " vie(s)")
+		# Lance l'animation en arrière-plan (pas d'await)
+		animate_heart_loss()
+		return
+
+	# Plus de vies → Fade complet + redémarrage
+	print("Game Over ! Perte de toutes les vies")
+	# Animation des cœurs + fade
+	await animate_heart_loss()
+	await fade_out_level(0.1)
+	await fade_in_level(0.3)
+
+	var target_level = current_level
+
+	if current_level > checkpoint_level:
+		# Pas au checkpoint → Recule d'un niveau et gagne 1 vie
+		target_level = current_level - 1
+		lives = 1
+		print("Retour au niveau ", target_level, " avec 1 vie")
+	else:
+		# Au checkpoint → Reste au checkpoint et gagne 1 vie
+		target_level = checkpoint_level
+		lives = 1
+		print("Bloqué au checkpoint niveau ", checkpoint_level, " avec 1 vie")
+
+	current_level = target_level
+	SaveManager.last_level_reached = current_level
+	SaveManager.save_game()
+	undo_history.clear()
+	checking_win = false
+	previous_boxes_on_targets = 0
+	currently_saving = false
+
+	update_lives_display()
+	update_undos_display()
+
 	load_level(current_level)
 	await get_tree().process_frame
 	checking_win = true

@@ -161,4 +161,11 @@ func push_box_chain(box: Node2D, direction: Vector2, parent: Node) -> bool:
 	# Pousse la caisse
 	print("Pousse la caisse de ", box.position, " vers ", box_target_pos)
 	box.push(direction)
+
+	# ← NOUVEAU : Vérifie si c'est une caisse radioactive (suite à une téléportation)
+	if box.is_radioactive:
+		var player = parent.get_node_or_null("Player")
+		if player and player.has_method("check_radioactive_hit"):
+			player.check_radioactive_hit()
+
 	return true
