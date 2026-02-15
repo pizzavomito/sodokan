@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://cp110osoiecfr"]
+
+[ext_resource type="Script" uid="uid://b34722p66d6jv" path="res://life_pickup.gd" id="1_wuhce"]
+[ext_resource type="Texture2D" uid="uid://dv53h52yrplln" path="res://assets/Environment/platformPack_item017.png" id="2_7bonr"]
+[ext_resource type="AudioStream" uid="uid://bqwgyrr5vfhc7" path="res://sounds/level-win.mp3" id="3_7bonr"]
+
+[node name="LifePickup" type="Node2D" unique_id=950363002]
+z_index = 10
+script = ExtResource("1_wuhce")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1212590445]
+z_index = 10
+texture = ExtResource("2_7bonr")
+
+[node name="PickupSound" type="AudioStreamPlayer2D" parent="." unique_id=1388147614]
+stream = ExtResource("3_7bonr")

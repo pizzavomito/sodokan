@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://cd6qw3h77kf5t"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_h5xpg"]
+particle_flag_disable_z = true
+emission_shape_scale = Vector3(0, 0, 0)
+direction = Vector3(1, -150, 0)
+initial_velocity_min = 100.0
+initial_velocity_max = 200.0
+gravity = Vector3(0, -150, 0)
+scale_min = 2.0
+scale_max = 4.0
+color = Color(0.9490196, 0.90588236, 0.03529412, 1)
+
+[node name="victory_particles" type="GPUParticles2D" unique_id=199091754]
+emitting = false
+amount = 20
+lifetime = 2.0
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_h5xpg")

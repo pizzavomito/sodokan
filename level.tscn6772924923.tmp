@@ -1,0 +1,68 @@
+[gd_scene format=4 uid="uid://bm8affslnqc1y"]
+
+[ext_resource type="Script" uid="uid://dpyj565stdy7q" path="res://level.gd" id="1_1ainy"]
+[ext_resource type="AudioStream" uid="uid://bqwgyrr5vfhc7" path="res://sounds/level-win.mp3" id="2_n6hdu"]
+[ext_resource type="Texture2D" uid="uid://dxd5p51wm5vtm" path="res://assets/Ground/ground_06.png" id="2_oi3di"]
+[ext_resource type="PackedScene" uid="uid://y36vx6sd8gig" path="res://player.tscn" id="4_0b4ue"]
+[ext_resource type="PackedScene" uid="uid://y25503nb2ntt" path="res://box.tscn" id="5_f2txt"]
+[ext_resource type="PackedScene" uid="uid://4751kqllh4km" path="res://target.tscn" id="6_1ainy"]
+[ext_resource type="Texture2D" uid="uid://cbuiitvemwctw" path="res://assets/Blocks/block_08.png" id="7_8cye3"]
+[ext_resource type="AudioStream" uid="uid://cxuiioqbve0f1" path="res://sounds/msuic_1.mp3" id="8_km5ld"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1ainy"]
+texture = ExtResource("2_oi3di")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_oi3di"]
+tile_size = Vector2i(64, 64)
+sources/0 = SubResource("TileSetAtlasSource_1ainy")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_n6hdu"]
+texture = ExtResource("7_8cye3")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_8b0r0"]
+tile_size = Vector2i(64, 64)
+sources/0 = SubResource("TileSetAtlasSource_n6hdu")
+
+[node name="Level" type="Node2D" unique_id=1108916393]
+y_sort_enabled = true
+script = ExtResource("1_1ainy")
+
+[node name="NextLevelSound" type="AudioStreamPlayer" parent="." unique_id=1274952983]
+stream = ExtResource("2_n6hdu")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1482850214]
+position = Vector2(576, 324)
+enabled = false
+
+[node name="LevelContainer" type="Node2D" parent="." unique_id=874886241]
+
+[node name="Ground" type="TileMapLayer" parent="LevelContainer" unique_id=899081201]
+z_index = -1
+tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAACAAAAAAAAAAAAAAADAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAGAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAJAAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAKAAEAAAAAAAAAAAALAAEAAAAAAAAAAAALAAIAAAAAAAAAAAALAAMAAAAAAAAAAAALAAQAAAAAAAAAAAALAAUAAAAAAAAAAAALAAAAAAAAAAAAAAALAAYAAAAAAAAAAAALAAcAAAAAAAAAAAAKAAcAAAAAAAAAAAAJAAcAAAAAAAAAAAAIAAcAAAAAAAAAAAAHAAcAAAAAAAAAAAAGAAcAAAAAAAAAAAAFAAcAAAAAAAAAAAAEAAcAAAAAAAAAAAADAAcAAAAAAAAAAAACAAcAAAAAAAAAAAABAAcAAAAAAAAAAAABAAYAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAMAAAAAAAAAAAABAAMAAAAAAAAAAAABAAIAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAcAAAAAAAAAAAABAAUAAAAAAAAAAAABAAQAAAAAAAAAAAABAAEAAAAAAAAAAAACAAEAAAAAAAAAAAADAAEAAAAAAAAAAAAEAAEAAAAAAAAAAAAFAAEAAAAAAAAAAAAGAAEAAAAAAAAAAAAHAAEAAAAAAAAAAAAIAAEAAAAAAAAAAAAFAAIAAAAAAAAAAAAEAAIAAAAAAAAAAAADAAIAAAAAAAAAAAACAAIAAAAAAAAAAAAGAAIAAAAAAAAAAAAHAAIAAAAAAAAAAAAJAAEAAAAAAAAAAAAKAAIAAAAAAAAAAAAJAAIAAAAAAAAAAAAJAAMAAAAAAAAAAAAIAAMAAAAAAAAAAAAKAAMAAAAAAAAAAAAIAAIAAAAAAAAAAAAFAAMAAAAAAAAAAAAEAAMAAAAAAAAAAAADAAMAAAAAAAAAAAACAAMAAAAAAAAAAAADAAQAAAAAAAAAAAAEAAQAAAAAAAAAAAAFAAQAAAAAAAAAAAAGAAQAAAAAAAAAAAAHAAQAAAAAAAAAAAAIAAQAAAAAAAAAAAAKAAQAAAAAAAAAAAAJAAQAAAAAAAAAAAAHAAMAAAAAAAAAAAAGAAMAAAAAAAAAAAAKAAUAAAAAAAAAAAAJAAUAAAAAAAAAAAAIAAUAAAAAAAAAAAAHAAUAAAAAAAAAAAAGAAUAAAAAAAAAAAAFAAUAAAAAAAAAAAACAAQAAAAAAAAAAAACAAUAAAAAAAAAAAADAAUAAAAAAAAAAAAEAAUAAAAAAAAAAAAIAAYAAAAAAAAAAAAJAAYAAAAAAAAAAAAKAAYAAAAAAAAAAAAHAAYAAAAAAAAAAAAGAAYAAAAAAAAAAAAFAAYAAAAAAAAAAAAEAAYAAAAAAAAAAAADAAYAAAAAAAAAAAACAAYAAAAAAAAAAAA=")
+tile_set = SubResource("TileSet_oi3di")
+
+[node name="Wall" type="TileMapLayer" parent="LevelContainer" unique_id=399732701]
+z_index = 2
+tile_map_data = PackedByteArray("AAAAAAAAAQAAAAAAAAABAAAAAQAAAAAAAAACAAAAAQAAAAAAAAADAAAAAQAAAAAAAAAEAAAAAQAAAAAAAAAFAAAAAQAAAAAAAAAGAAAAAQAAAAAAAAAHAAAAAQAAAAAAAAAIAAAAAQAAAAAAAAAJAAAAAQAAAAAAAAAKAAAAAQAAAAAAAAALAAAAAQAAAAAAAAALAAEAAQAAAAAAAAALAAIAAQAAAAAAAAALAAMAAQAAAAAAAAALAAQAAQAAAAAAAAALAAUAAQAAAAAAAAALAAYAAQAAAAAAAAALAAcAAQAAAAAAAAAKAAcAAQAAAAAAAAAJAAcAAQAAAAAAAAAIAAcAAQAAAAAAAAAHAAcAAQAAAAAAAAAGAAcAAQAAAAAAAAAFAAcAAQAAAAAAAAAEAAcAAQAAAAAAAAADAAcAAQAAAAAAAAACAAcAAQAAAAAAAAABAAcAAQAAAAAAAAAAAAcAAQAAAAAAAAAAAAYAAQAAAAAAAAAAAAUAAQAAAAAAAAAAAAQAAQAAAAAAAAAAAAMAAQAAAAAAAAAAAAIAAQAAAAAAAAAAAAEAAQAAAAAAAAA=")
+tile_set = SubResource("TileSet_8b0r0")
+
+[node name="Player" parent="LevelContainer" unique_id=1684674943 instance=ExtResource("4_0b4ue")]
+z_index = 1
+position = Vector2(448, 256)
+
+[node name="Box" parent="LevelContainer" unique_id=627651653 instance=ExtResource("5_f2txt")]
+
+[node name="Target" parent="LevelContainer" unique_id=569338599 instance=ExtResource("6_1ainy")]
+
+[node name="WhistlePlayer" type="AudioStreamPlayer" parent="." unique_id=1816589424]
+volume_db = -8.23
+
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="." unique_id=1757751097]
+stream = ExtResource("8_km5ld")
+volume_db = -15.237
+autoplay = true
+parameters/looping = true

@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://4751kqllh4km"]
+
+[ext_resource type="Script" uid="uid://byfvod2dswn3" path="res://target.gd" id="1_e1yvt"]
+[ext_resource type="Texture2D" uid="uid://ctdtajjmfk5b" path="res://assets/Crates/crate_27.png" id="1_t2jmu"]
+
+[node name="Target" type="Node2D" unique_id=569338599]
+script = ExtResource("1_e1yvt")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1148112502]
+z_index = -1
+texture = ExtResource("1_t2jmu")
+centered = false

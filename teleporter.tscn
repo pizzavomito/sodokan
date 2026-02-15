@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://cadi0eugveiec"]
+
+[ext_resource type="Script" uid="uid://utcqasomweuc" path="res://teleporter.gd" id="1_tuehi"]
+[ext_resource type="Texture2D" uid="uid://bufbfia2423nq" path="res://assets/Environment/platformPack_tile041.png" id="2_cpfq8"]
+[ext_resource type="Texture2D" uid="uid://bchcp4q66w2dd" path="res://assets/Environment/platformPack_tile036.png" id="2_kk6yu"]
+[ext_resource type="Texture2D" uid="uid://ccro4lx8l2c8i" path="res://assets/Environment/platformPack_tile030.png" id="3_ahrse"]
+[ext_resource type="AudioStream" uid="uid://c6kibc1v2vqwf" path="res://sounds/teleportation.wav" id="3_kk6yu"]
+
+[node name="Teleporter" type="Node2D" unique_id=1745893569]
+script = ExtResource("1_tuehi")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1219466548]
+texture = ExtResource("2_cpfq8")
+centered = false
+
+[node name="ActiveSprite" type="Sprite2D" parent="." unique_id=323754616]
+z_index = 1
+texture = ExtResource("2_kk6yu")
+centered = false
+
+[node name="CooldownSprite" type="Sprite2D" parent="." unique_id=1562464141]
+visible = false
+z_index = 1
+texture = ExtResource("3_ahrse")
+centered = false
+
+[node name="TeleportSound" type="AudioStreamPlayer2D" parent="." unique_id=1669359249]
+stream = ExtResource("3_kk6yu")
+volume_db = -2.993

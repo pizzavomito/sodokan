@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://d2s87nsduqe71"]
+
+[ext_resource type="Script" uid="uid://cuvp4ml0vpuo1" path="res://main_menu.gd" id="1_06t4h"]
+
+[node name="MainMenu" type="Control" unique_id=640143997]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_06t4h")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1512533826]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 1144.0
+offset_bottom = 632.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.36862746, 0.10980392, 1, 1)
+
+[node name="TitleLabel" type="Label" parent="." unique_id=226189424]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_top = 32.0
+offset_right = 1164.0
+offset_bottom = 120.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 64
+text = "SOKOBAN"
+horizontal_alignment = 1
+
+[node name="ButtonsContainer" type="VBoxContainer" parent="." unique_id=723907232]
+layout_mode = 0
+offset_left = 192.0
+offset_top = 168.0
+offset_right = 992.0
+offset_bottom = 632.0
+theme_override_constants/separation = 20
+
+[node name="PlayButton" type="Button" parent="ButtonsContainer" unique_id=549492606]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "AYPL"
+
+[node name="ResetButton" type="Button" parent="ButtonsContainer" unique_id=413583861]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "TSERE"
+
+[node name="QuitButton" type="Button" parent="ButtonsContainer" unique_id=1767420493]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "UQTI"
