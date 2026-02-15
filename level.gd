@@ -71,6 +71,7 @@ func _ready():
 	randomize()
 	schedule_next_whistle()
 	update_undos_display()
+	update_undos_display()
 	update_lives_display()
 	
 	# Fade in de la musique
@@ -151,6 +152,7 @@ func undo_move():
 	var player = container.get_node_or_null("Player")
 	if player:
 		print("   Joueur: ", state["player_pos"])
+		print("   Joueur: ", state["player_pos"])
 		player.position = state["player_pos"]
 
 	# Restaure caisses dans le bon ordre
@@ -158,6 +160,7 @@ func undo_move():
 	for node in container.get_children():
 		if GameUtils.is_box(node):
 			if box_index < state["boxes"].size():
+				print("   Caisse ", box_index, ": ", state["boxes"][box_index]["pos"])
 				print("   Caisse ", box_index, ": ", state["boxes"][box_index]["pos"])
 				node.position = state["boxes"][box_index]["pos"]
 				box_index += 1
@@ -382,7 +385,13 @@ func load_level(level_index):
 	# (utile pour faire undo sur le premier mouvement)
 	save_state()
 	
+	# ← IMPORTANT : Sauvegarde l'ÉTAT INITIAL du niveau
+	# (utile pour faire undo sur le premier mouvement)
+	save_state()
+	
 	checking_win = true
+
+	
 
 	
 
@@ -638,6 +647,7 @@ func check_win():
 			# Ouvre la porte
 			door.open()
 			spawn_victory_particles(GameUtils.pos_to_tile(door.position))
+			spawn_victory_particles(GameUtils.pos_to_tile(door.position))
 	else:
 		# Sinon, si la porte était ouverte → REFERME-LA
 		if door and door.is_open:
@@ -691,6 +701,15 @@ func update_undos_display():
 			undos += "💎"
 		undos_label.text = undos
 
+
+func update_undos_display():
+	var undos_label = get_node_or_null("CanvasLayer/UndosLabel")
+	if undos_label:
+		var undos = ""
+		for i in range(SaveManager.current_undos):
+			undos += "💎"
+		undos_label.text = undos
+
 func update_lives_display():
 	var lives_label = get_node_or_null("CanvasLayer/LivesLabel")
 	if lives_label:
@@ -706,15 +725,22 @@ func next_level():
 	# ← NOUVEAU : +1 undo quand on passe un niveau
 	SaveManager.add_undo()
 	
+	# ← NOUVEAU : +1 undo quand on passe un niveau
+	SaveManager.add_undo()
+	
 	var new_checkpoint = int(current_level / 10) * 10
 	if new_checkpoint > checkpoint_level:
 		checkpoint_level = new_checkpoint
 		lives = 3
 		SaveManager.reset_undos_at_checkpoint()  # ← NOUVEAU : reset undos
 		print("Nouveau checkpoint au niveau ", checkpoint_level, " - Undos reset à 1")
+		lives = 3
+		SaveManager.reset_undos_at_checkpoint()  # ← NOUVEAU : reset undos
+		print("Nouveau checkpoint au niveau ", checkpoint_level, " - Undos reset à 1")
 	
 	load_level(current_level)
 	update_lives_display()
+	update_undos_display()  # ← NOUVEAU
 	update_undos_display()  # ← NOUVEAU
 	await get_tree().process_frame
 	checking_win = true
@@ -750,8 +776,10 @@ func restart_level():
 	checking_win = false
 	previous_boxes_on_targets = 0
 	currently_saving = false
+	currently_saving = false
 	
 	update_lives_display()
+	update_undos_display()
 	update_undos_display()
 	
 	load_level(current_level)
