@@ -108,7 +108,6 @@ func check_life_pickup():
 			if life_tile == tile_pos:
 				# Vérifie que la vie n'a pas déjà été collectée
 				if not node.is_collected:
-				if not node.is_collected:
 					collect_life(node)
 				return
 
@@ -126,27 +125,6 @@ func collect_life(life_node):
 		
 		# Effet de collecte
 		life_node.collect()
-
-func check_undo_pickup():
-	var tile_pos = GameUtils.pos_to_tile(position)
-	
-	for node in get_parent().get_children():
-		if node.name == "UndoPickup":
-			var undo_tile = GameUtils.pos_to_tile(node.position)
-			
-			if undo_tile == tile_pos:
-				if not node.is_collected:
-					collect_undo(node)
-				return
-
-func collect_undo(undo_node):
-	var level = get_parent().get_parent()
-	if level:
-		SaveManager.collect_undo(undo_node.level_id)
-		level.update_undos_display()
-		print("Undo collecté ! Total : ", SaveManager.current_undos)
-		
-		undo_node.collect()
 
 func check_undo_pickup():
 	var tile_pos = GameUtils.pos_to_tile(position)
@@ -198,7 +176,6 @@ func check_door():
 
 func enter_door():
 	# Entre dans la porte et passe au niveau suivant
-	var level = get_parent().get_parent()
 	var level = get_parent().get_parent()
 	if level:
 		level.player_entered_door()

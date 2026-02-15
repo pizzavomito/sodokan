@@ -16,12 +16,9 @@ func save_game():
 	if file:
 		file.store_var({
 			"last_level": last_level_reached,
-			"collected_lives": collected_lives,
 			"collected_undos": collected_undos,  # ← NOUVEAU
-			"current_undos": current_undos       # ← NOUVEAU
+			"current_undos": current_undos,      # ← NOUVEAU
 			"collected_lives": collected_lives,
-			"collected_undos": collected_undos,  # ← NOUVEAU
-			"current_undos": current_undos       # ← NOUVEAU
 		})
 		file.close()
 
@@ -50,31 +47,6 @@ func collect_life(level_id: int):
 
 func is_life_collected(level_id: int) -> bool:
 	return level_id in collected_lives
-
-# ← NOUVEAU : Gestion des undos
-func collect_undo(level_id: int):
-	if not level_id in collected_undos:
-		collected_undos.append(level_id)
-		current_undos += 1
-		save_game()
-
-func is_undo_collected(level_id: int) -> bool:
-	return level_id in collected_undos
-
-func use_undo():
-	if current_undos > 0:
-		current_undos -= 1
-		save_game()
-		return true
-	return false
-
-func add_undo():
-	current_undos += 1
-	save_game()
-
-func reset_undos_at_checkpoint():
-	current_undos = 1
-	save_game()
 
 # ← NOUVEAU : Gestion des undos
 func collect_undo(level_id: int):

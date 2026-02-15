@@ -701,15 +701,6 @@ func update_undos_display():
 			undos += "💎"
 		undos_label.text = undos
 
-
-func update_undos_display():
-	var undos_label = get_node_or_null("CanvasLayer/UndosLabel")
-	if undos_label:
-		var undos = ""
-		for i in range(SaveManager.current_undos):
-			undos += "💎"
-		undos_label.text = undos
-
 func update_lives_display():
 	var lives_label = get_node_or_null("CanvasLayer/LivesLabel")
 	if lives_label:
