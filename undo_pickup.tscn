@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://dx3byibiwt0ad"]
+
+[ext_resource type="Script" uid="uid://dhhhxi0ld2ytx" path="res://undo_pickup.gd" id="1_q1q6x"]
+[ext_resource type="Texture2D" uid="uid://bbdwldadgjc1s" path="res://assets/Environment/platformPack_item007.png" id="2_b34em"]
+[ext_resource type="AudioStream" uid="uid://bqwgyrr5vfhc7" path="res://sounds/level-win.mp3" id="2_rqu7e"]
+
+[node name="UndoPickup" type="Node2D" unique_id=1263837207]
+script = ExtResource("1_q1q6x")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=176325234]
+texture = ExtResource("2_b34em")
+
+[node name="PickupSound" type="AudioStreamPlayer2D" parent="." unique_id=1284486692]
+stream = ExtResource("2_rqu7e")

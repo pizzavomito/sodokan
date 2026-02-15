@@ -12,6 +12,7 @@ scale_max = 4.0
 color = Color(0.9490196, 0.90588236, 0.03529412, 1)
 
 [node name="victory_particles" type="GPUParticles2D" unique_id=199091754]
+z_index = 15
 emitting = false
 amount = 20
 lifetime = 2.0

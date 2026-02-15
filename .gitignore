@@ -1,3 +1,94 @@
 # Godot 4+ specific ignores
 .godot/
-/android/
+
+# Godot-specific ignores
+*.import
+*.translation
+export.cfg
+export_presets.cfg
+
+# Imported translations (automatically generated from CSV)
+*.translation
+
+# Mono-specific ignores (si tu utilises C#)
+.mono/
+data_*/
+mono_crash.*.json
+
+# System/tool-specific ignores
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+
+# IDE et éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Build / Export
+builds/
+exports/
+dist/
+*.exe
+*.pck
+*.zip
+*.apk
+*.dmg
+*.app
+
+# Logs et debug
+*.log
+logs/
+*.stackdump
+
+# Fichiers temporaires
+*.tmp
+*.bak
+*.old
+*.orig
+*~
+
+# Assets que tu ne veux peut-être pas versionner
+# (décommente selon tes besoins)
+# *.wav
+# *.mp3
+# *.ogg
+# *.png
+# *.jpg
+# *.psd
+# *.blend
+# *.blend1
+
+# Addons tiers (si installés via gestionnaire)
+# addons/*/
+
+# Fichiers personnels/sensibles
+.env
+secrets/
+credentials/
