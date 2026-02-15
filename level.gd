@@ -10,6 +10,9 @@ const LIFE_PICKUP_SCENE = preload("res://life_pickup.tscn")
 const UNDO_PICKUP_SCENE = preload("res://undo_pickup.tscn")
 const SECRET_WALL_SCENE = preload("res://secret_wall.tscn")
 
+# Son de perte de vie
+const POP_SOUND = preload("res://sounds/pop.mp3")
+
 # Sons de sifflement aléatoires
 var whistle_sounds = [
 	preload("res://sounds/whistles/whistle1.mp3"),
@@ -70,7 +73,6 @@ func _ready():
 	
 	randomize()
 	schedule_next_whistle()
-	update_undos_display()
 	update_undos_display()
 	update_lives_display()
 	
@@ -152,7 +154,6 @@ func undo_move():
 	var player = container.get_node_or_null("Player")
 	if player:
 		print("   Joueur: ", state["player_pos"])
-		print("   Joueur: ", state["player_pos"])
 		player.position = state["player_pos"]
 
 	# Restaure caisses dans le bon ordre
@@ -161,9 +162,11 @@ func undo_move():
 		if GameUtils.is_box(node):
 			if box_index < state["boxes"].size():
 				print("   Caisse ", box_index, ": ", state["boxes"][box_index]["pos"])
-				print("   Caisse ", box_index, ": ", state["boxes"][box_index]["pos"])
 				node.position = state["boxes"][box_index]["pos"]
 				box_index += 1
+
+	# ← NOUVEAU : Animation undo
+	await animate_undo()
 
 	update_undos_display()
 
@@ -378,22 +381,14 @@ func load_level(level_index):
 		
 	center_level()
 	change_music_for_level(level_index)
-	
+
 	await get_tree().process_frame
-	
-	# ← IMPORTANT : Sauvegarde l'ÉTAT INITIAL du niveau
-	# (utile pour faire undo sur le premier mouvement)
-	save_state()
-	
+
 	# ← IMPORTANT : Sauvegarde l'ÉTAT INITIAL du niveau
 	# (utile pour faire undo sur le premier mouvement)
 	save_state()
 	
 	checking_win = true
-
-	
-
-	
 
 func center_level():
 	# Décale le conteneur pour centrer le niveau
@@ -647,7 +642,6 @@ func check_win():
 			# Ouvre la porte
 			door.open()
 			spawn_victory_particles(GameUtils.pos_to_tile(door.position))
-			spawn_victory_particles(GameUtils.pos_to_tile(door.position))
 	else:
 		# Sinon, si la porte était ouverte → REFERME-LA
 		if door and door.is_open:
@@ -708,35 +702,123 @@ func update_lives_display():
 		for i in range(lives):
 			hearts += "❤️"
 		lives_label.text = hearts
-	
+
+func fade_out_level(duration: float) -> void:
+	var level_container = get_node_or_null("LevelContainer")
+	if level_container:
+		var tween = create_tween()
+		tween.tween_property(level_container, "modulate:a", 0.0, duration)
+		await tween.finished
+
+func fade_in_level(duration: float) -> void:
+	var level_container = get_node_or_null("LevelContainer")
+	if level_container:
+		var tween = create_tween()
+		tween.tween_property(level_container, "modulate:a", 1.0, duration)
+		await tween.finished
+
+func animate_life_loss():
+	# Joue le son de perte de vie
+	var pop_player = get_node_or_null("PopPlayer")
+	if pop_player:
+		pop_player.stream = POP_SOUND
+		pop_player.play()
+
+	# Masque la scène
+	await fade_out_level(0.1)
+
+	var lives_label = get_node_or_null("CanvasLayer/LivesLabel")
+	if lives_label:
+		# Animation de perte de vie
+		var tween = create_tween()
+
+		# Shake vertical des cœurs
+		tween.tween_property(lives_label, "position:y", lives_label.position.y - 10, 0.1)
+		tween.tween_property(lives_label, "position:y", lives_label.position.y + 10, 0.1)
+		tween.tween_property(lives_label, "position:y", lives_label.position.y, 0.1)
+
+		# Flash de couleur (blanc/rouge)
+		tween.parallel().tween_property(lives_label, "modulate", Color.WHITE, 0.15)
+		tween.tween_property(lives_label, "modulate", Color.RED, 0.15)
+		tween.tween_property(lives_label, "modulate", Color.WHITE, 0.15)
+
+		# Scale pulse
+		tween.parallel().tween_property(lives_label, "scale", Vector2(1.2, 1.2), 0.1)
+		tween.tween_property(lives_label, "scale", Vector2(1.0, 1.0), 0.1)
+
+		await tween.finished
+
+	# Remet la scène visible
+	await fade_in_level(0.3)
+
+func animate_undo():
+	# ← NOUVEAU : Joue le son
+	var pop_player = get_node_or_null("PopPlayer")
+	if pop_player:
+		pop_player.stream = POP_SOUND
+		pop_player.play()
+
+	# Animation du level
+	var level_container = get_node_or_null("LevelContainer")
+	if level_container:
+		var tween_level = create_tween()
+		# Flash blanc/bleu clair
+		tween_level.tween_property(level_container, "modulate", Color.WHITE, 0.1)
+		tween_level.tween_property(level_container, "modulate", Color(0.8, 0.9, 1.0), 0.1)
+		tween_level.tween_property(level_container, "modulate", Color.WHITE, 0.1)
+		# Léger shake
+		tween_level.parallel().tween_property(level_container, "position:x", level_container.position.x - 5, 0.05)
+		tween_level.tween_property(level_container, "position:x", level_container.position.x + 5, 0.05)
+		tween_level.tween_property(level_container, "position:x", level_container.position.x, 0.05)
+
+	var undos_label = get_node_or_null("CanvasLayer/UndosLabel")
+	if undos_label:
+		# Animation des diamants
+		var tween = create_tween()
+
+		# Shake vertical des diamants
+		tween.tween_property(undos_label, "position:y", undos_label.position.y - 10, 0.1)
+		tween.tween_property(undos_label, "position:y", undos_label.position.y + 10, 0.1)
+		tween.tween_property(undos_label, "position:y", undos_label.position.y, 0.1)
+
+		# Flash de couleur (blanc/bleu)
+		tween.parallel().tween_property(undos_label, "modulate", Color.WHITE, 0.15)
+		tween.tween_property(undos_label, "modulate", Color(0.6, 0.8, 1.0), 0.15)
+		tween.tween_property(undos_label, "modulate", Color.WHITE, 0.15)
+
+		await tween.finished
+
 func next_level():
 	current_level += 1
 	SaveManager.update_level(current_level)
-	
-	# ← NOUVEAU : +1 undo quand on passe un niveau
+
+	# +1 undo quand on passe un niveau
 	SaveManager.add_undo()
-	
-	# ← NOUVEAU : +1 undo quand on passe un niveau
-	SaveManager.add_undo()
-	
+
 	var new_checkpoint = int(current_level / 10) * 10
 	if new_checkpoint > checkpoint_level:
 		checkpoint_level = new_checkpoint
 		lives = 3
-		SaveManager.reset_undos_at_checkpoint()  # ← NOUVEAU : reset undos
+		SaveManager.reset_undos_at_checkpoint()
 		print("Nouveau checkpoint au niveau ", checkpoint_level, " - Undos reset à 1")
-		lives = 3
-		SaveManager.reset_undos_at_checkpoint()  # ← NOUVEAU : reset undos
-		print("Nouveau checkpoint au niveau ", checkpoint_level, " - Undos reset à 1")
-	
+
+	# Fade out avant de charger le nouveau niveau
+	await fade_out_level(0.1)
+
 	load_level(current_level)
 	update_lives_display()
-	update_undos_display()  # ← NOUVEAU
-	update_undos_display()  # ← NOUVEAU
+	update_undos_display()
 	await get_tree().process_frame
+
+	# Fade in après chargement du nouveau niveau
+	await fade_in_level(0.3)
+
 	checking_win = true
 	
 func restart_level():
+	# ← NOUVEAU : Animation de perte de vie avant de diminuer les vies
+	await animate_life_loss()
+
 	# Perd une vie
 	lives -= 1
 	print("Vies restantes : ", lives)
@@ -767,10 +849,8 @@ func restart_level():
 	checking_win = false
 	previous_boxes_on_targets = 0
 	currently_saving = false
-	currently_saving = false
 	
 	update_lives_display()
-	update_undos_display()
 	update_undos_display()
 	
 	load_level(current_level)

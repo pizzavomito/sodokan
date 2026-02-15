@@ -33,8 +33,11 @@ func close():  # ← NOUVELLE FONCTION
 func update_visual():
 	var closed_sprite = get_node_or_null("ClosedSprite")
 	var open_sprite = get_node_or_null("OpenSprite")
-	
+	var hole_sprite = get_node_or_null("HoleSprite")
+
 	if closed_sprite:
 		closed_sprite.visible = not is_open
 	if open_sprite:
-		open_sprite.visible = is_open
+		open_sprite.visible = false  # Toujours caché
+	if hole_sprite:
+		hole_sprite.visible = false  # Toujours caché

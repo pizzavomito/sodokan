@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://bchcp4q66w2dd" path="res://assets/Environment/platformPack_tile036.png" id="2_kk6yu"]
 [ext_resource type="Texture2D" uid="uid://ccro4lx8l2c8i" path="res://assets/Environment/platformPack_tile030.png" id="3_ahrse"]
 [ext_resource type="AudioStream" uid="uid://c6kibc1v2vqwf" path="res://sounds/teleportation.wav" id="3_kk6yu"]
+[ext_resource type="Texture2D" uid="uid://dao0kaigwxgu4" path="res://assets/Environment/environment_10.png" id="4_floating"]
 
 [node name="Teleporter" type="Node2D" unique_id=1745893569]
 script = ExtResource("1_tuehi")
@@ -23,6 +24,11 @@ visible = false
 z_index = 1
 texture = ExtResource("3_ahrse")
 centered = false
+
+[node name="FloatingSprite" type="Sprite2D" parent="." unique_id=1234567890]
+z_index = 1000
+position = Vector2(32, 32)
+texture = ExtResource("4_floating")
 
 [node name="TeleportSound" type="AudioStreamPlayer2D" parent="." unique_id=1669359249]
 stream = ExtResource("3_kk6yu")

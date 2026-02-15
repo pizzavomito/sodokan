@@ -12,7 +12,7 @@ func _on_play_pressed():
 
 func _on_reset_pressed():
 	# Remet toute la progression à zéro
-	SaveManager.last_level_reached = 7
+	SaveManager.last_level_reached = 0
 	SaveManager.collected_lives = []
 	SaveManager.collected_undos = []
 	SaveManager.current_undos = 1

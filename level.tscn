@@ -9,8 +9,6 @@
 [ext_resource type="Texture2D" uid="uid://dcmn7t724osng" path="res://assets/Ground/background_brown.png" id="3_aicyk"]
 [ext_resource type="PackedScene" uid="uid://y36vx6sd8gig" path="res://player.tscn" id="4_0b4ue"]
 [ext_resource type="Texture2D" uid="uid://nokq5qcj54aw" path="res://assets/Blocks/block_02.png" id="4_i2t4f"]
-[ext_resource type="PackedScene" uid="uid://y25503nb2ntt" path="res://box.tscn" id="5_f2txt"]
-[ext_resource type="PackedScene" uid="uid://4751kqllh4km" path="res://target.tscn" id="6_1ainy"]
 [ext_resource type="Texture2D" uid="uid://cbuiitvemwctw" path="res://assets/Blocks/block_08.png" id="7_8cye3"]
 [ext_resource type="AudioStream" uid="uid://b5t5qd55517c1" path="res://sounds/music_1.mp3" id="8_km5ld"]
 
@@ -89,10 +87,6 @@ tile_set = SubResource("TileSet_8b0r0")
 z_index = 1
 position = Vector2(296, 256)
 
-[node name="Box" parent="LevelContainer" unique_id=627651653 instance=ExtResource("5_f2txt")]
-
-[node name="Target" parent="LevelContainer" unique_id=569338599 instance=ExtResource("6_1ainy")]
-
 [node name="WhistlePlayer" type="AudioStreamPlayer" parent="." unique_id=1816589424]
 volume_db = -8.23
 
@@ -104,6 +98,8 @@ parameters/looping = true
 
 [node name="VoicePlayer" type="AudioStreamPlayer" parent="." unique_id=1705205108]
 volume_db = -5.14
+
+[node name="PopPlayer" type="AudioStreamPlayer" parent="." unique_id=1777435571]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1971396938]
 
