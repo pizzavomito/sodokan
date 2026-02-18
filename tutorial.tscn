@@ -1,0 +1,115 @@
+[gd_scene format=4 uid="uid://cjn4tllwaani7"]
+
+[ext_resource type="Script" path="res://tutorial.gd" id="1_tutorial"]
+[ext_resource type="AudioStream" uid="uid://bqwgyrr5vfhc7" path="res://sounds/level-win.mp3" id="2_n6hdu"]
+[ext_resource type="Texture2D" uid="uid://dxd5p51wm5vtm" path="res://assets/Ground/ground_06.png" id="2_oi3di"]
+[ext_resource type="Texture2D" uid="uid://bl4fwslbpamcy" path="res://assets/Ground/ground_05.png" id="3_2orkt"]
+[ext_resource type="Texture2D" uid="uid://dsqmu4xauv7kj" path="res://assets/Ground/background_blue.png" id="3_8b0r0"]
+[ext_resource type="Texture2D" uid="uid://b6qggqwq738yx" path="res://assets/Ground/ground_01.png" id="3_8cye3"]
+[ext_resource type="Texture2D" uid="uid://dcmn7t724osng" path="res://assets/Ground/background_brown.png" id="3_aicyk"]
+[ext_resource type="PackedScene" uid="uid://y36vx6sd8gig" path="res://player.tscn" id="4_0b4ue"]
+[ext_resource type="Texture2D" uid="uid://nokq5qcj54aw" path="res://assets/Blocks/block_02.png" id="4_i2t4f"]
+[ext_resource type="Texture2D" uid="uid://cbuiitvemwctw" path="res://assets/Blocks/block_08.png" id="7_8cye3"]
+[ext_resource type="Texture2D" uid="uid://dgaqshd21fdxb" path="res://assets/Blocks/block_03.png" id="9_2orkt"]
+[ext_resource type="Texture2D" uid="uid://ckhsf1r6qr54c" path="res://assets/Blocks/block_01.png" id="11_8b0r0"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_v5j5c"]
+texture = ExtResource("3_8b0r0")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_oi3di"]
+tile_size = Vector2i(64, 64)
+sources/0 = SubResource("TileSetAtlasSource_v5j5c")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8cye3"]
+texture = ExtResource("4_i2t4f")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8b0r0"]
+texture = ExtResource("9_2orkt")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5pxul"]
+texture = ExtResource("7_8cye3")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fedht"]
+texture = ExtResource("11_8b0r0")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_8b0r0"]
+tile_size = Vector2i(64, 64)
+sources/0 = SubResource("TileSetAtlasSource_8cye3")
+sources/1 = SubResource("TileSetAtlasSource_8b0r0")
+sources/2 = SubResource("TileSetAtlasSource_5pxul")
+sources/3 = SubResource("TileSetAtlasSource_fedht")
+
+[node name="Tutorial" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_tutorial")
+
+[node name="NextLevelSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_n6hdu")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(576, 324)
+enabled = false
+
+[node name="LevelContainer" type="Node2D" parent="."]
+
+[node name="Ground" type="TileMapLayer" parent="LevelContainer"]
+z_index = -1
+tile_set = SubResource("TileSet_oi3di")
+
+[node name="Wall" type="TileMapLayer" parent="LevelContainer"]
+z_index = 2
+tile_set = SubResource("TileSet_8b0r0")
+
+[node name="Player" parent="LevelContainer" instance=ExtResource("4_0b4ue")]
+z_index = 1
+position = Vector2(296, 256)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="LivesLabel" type="Label" parent="CanvasLayer"]
+z_index = 10
+offset_right = 99.0
+offset_bottom = 34.0
+theme_override_font_sizes/font_size = 24
+text = "❤️❤️❤️"
+
+[node name="LevelLabel" type="Label" parent="CanvasLayer"]
+z_index = 10
+offset_top = 40.0
+offset_right = 100.0
+offset_bottom = 63.0
+theme_override_font_sizes/font_size = 20
+text = "Tutoriel 1/11"
+vertical_alignment = 1
+
+[node name="TutorialLabel" type="Label" parent="CanvasLayer"]
+z_index = 10
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -400.0
+offset_top = 20.0
+offset_right = 400.0
+offset_bottom = 120.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+text = "Instructions du tutoriel"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

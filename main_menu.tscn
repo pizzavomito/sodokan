@@ -47,6 +47,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "AYPL"
 
+[node name="TutorialButton" type="Button" parent="ButtonsContainer" unique_id=549492607]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "LAIROTUТ"
+
 [node name="ResetButton" type="Button" parent="ButtonsContainer" unique_id=413583861]
 layout_mode = 2
 theme_override_font_sizes/font_size = 64

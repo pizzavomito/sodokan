@@ -19,6 +19,9 @@ config/icon="res://icon.svg"
 
 SaveManager="*uid://bwsv7v4hgya5q"
 GameUtils="*uid://c7aldfebq4spb"
+GameMode="*uid://cbmlpqmve7dyr"
+LevelAudio="*res://level_audio.gd"
+MagnetSystem="*res://magnet_system.gd"
 
 [input]
 

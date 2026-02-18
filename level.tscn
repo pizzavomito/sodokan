@@ -11,19 +11,11 @@
 [ext_resource type="Texture2D" uid="uid://nokq5qcj54aw" path="res://assets/Blocks/block_02.png" id="4_i2t4f"]
 [ext_resource type="Texture2D" uid="uid://cbuiitvemwctw" path="res://assets/Blocks/block_08.png" id="7_8cye3"]
 [ext_resource type="AudioStream" uid="uid://b5t5qd55517c1" path="res://sounds/music_1.mp3" id="8_km5ld"]
+[ext_resource type="Texture2D" uid="uid://dgaqshd21fdxb" path="res://assets/Blocks/block_03.png" id="9_2orkt"]
+[ext_resource type="Texture2D" uid="uid://ckhsf1r6qr54c" path="res://assets/Blocks/block_01.png" id="11_8b0r0"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_v5j5c"]
 texture = ExtResource("3_8b0r0")
-texture_region_size = Vector2i(64, 64)
-0:0/0 = 0
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2orkt"]
-texture = ExtResource("3_8cye3")
-texture_region_size = Vector2i(64, 64)
-0:0/0 = 0
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_h6smj"]
-texture = ExtResource("3_aicyk")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
@@ -37,13 +29,23 @@ texture = ExtResource("3_2orkt")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2orkt"]
+texture = ExtResource("3_8cye3")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_h6smj"]
+texture = ExtResource("3_aicyk")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
 [sub_resource type="TileSet" id="TileSet_oi3di"]
 tile_size = Vector2i(64, 64)
-sources/2 = SubResource("TileSetAtlasSource_1ainy")
-sources/5 = SubResource("TileSetAtlasSource_aicyk")
-sources/10 = SubResource("TileSetAtlasSource_2orkt")
-sources/11 = SubResource("TileSetAtlasSource_h6smj")
 sources/0 = SubResource("TileSetAtlasSource_v5j5c")
+sources/1 = SubResource("TileSetAtlasSource_1ainy")
+sources/2 = SubResource("TileSetAtlasSource_aicyk")
+sources/3 = SubResource("TileSetAtlasSource_2orkt")
+sources/4 = SubResource("TileSetAtlasSource_h6smj")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8cye3"]
 texture = ExtResource("4_i2t4f")
@@ -51,7 +53,17 @@ texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8b0r0"]
+texture = ExtResource("9_2orkt")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5pxul"]
 texture = ExtResource("7_8cye3")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fedht"]
+texture = ExtResource("11_8b0r0")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
@@ -59,6 +71,8 @@ texture_region_size = Vector2i(64, 64)
 tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_8cye3")
 sources/1 = SubResource("TileSetAtlasSource_8b0r0")
+sources/2 = SubResource("TileSetAtlasSource_5pxul")
+sources/3 = SubResource("TileSetAtlasSource_fedht")
 
 [node name="Level" type="Node2D" unique_id=1108916393]
 y_sort_enabled = true
@@ -118,3 +132,52 @@ offset_bottom = 63.0
 theme_override_font_sizes/font_size = 24
 text = "💎"
 vertical_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="CanvasLayer" unique_id=1234567890]
+z_index = 10
+offset_top = 80.0
+offset_right = 100.0
+offset_bottom = 103.0
+theme_override_font_sizes/font_size = 20
+text = "Level 0"
+vertical_alignment = 1
+
+[node name="LevelJumpLabel" type="Label" parent="CanvasLayer" unique_id=987625691]
+z_index = 10
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -60.0
+offset_right = 100.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TutorialLabel" type="Label" parent="CanvasLayer" unique_id=1125435732]
+visible = false
+z_index = 10
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -400.0
+offset_top = 20.0
+offset_right = 400.0
+offset_bottom = 120.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+text = "Instructions du tutoriel"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

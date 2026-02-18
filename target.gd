@@ -18,4 +18,6 @@ func set_color(new_color: String):
 			"metal":
 				sprite.texture = load("res://assets/Crates/crate_31.png")
 			"radioactive":
-				sprite.texture = load("res://assets/Crates/crate_06_radio+.png")
+				sprite.texture = load("res://assets/Crates/crate_48.png")
+			"magnet":
+				sprite.texture = load("res://assets/Crates/crate_50.png")

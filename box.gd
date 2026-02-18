@@ -4,6 +4,9 @@ var is_pushing = false
 var color = "red"
 var is_radioactive = false  # ← NOUVEAU : marque les caisses radioactives
 var radioactive_checked = false  # ← Flag pour éviter de vérifier deux fois
+var is_magnet = false  # ← NOUVEAU : marque les caisses magnétiques
+var attached_box = null  # ← NOUVEAU : caisse attachée (pour les caisses métal collées)
+var attached_metals = []  # ← NOUVEAU : caisses métal attachées (pour les caisses magnétiques)
 
 func push(direction):
 	# Si la caisse est déjà en train de bouger, on ne fait rien
@@ -23,6 +26,10 @@ func push(direction):
 	var tween = create_tween()
 	tween.tween_property(self, "position", target_pos, 0.15)
 	tween.finished.connect(func():
+		# Sécurité : vérifie que l'objet existe toujours
+		if not is_inside_tree():
+			return
+
 		is_pushing = false
 
 		# Vérifie s'il y a un téléporteur
@@ -132,6 +139,16 @@ func create_ghost_sprite(original_sprite):
 		ghost.queue_free()
 	)
 
+func shake_impact(direction: Vector2 = Vector2.ZERO) -> void:
+	var original_pos = position
+	var shake_dir = direction if direction != Vector2.ZERO else Vector2(1, 0)
+	var tween = create_tween()
+	tween.tween_property(self, "position", original_pos + shake_dir * 4.0, 0.05)
+	tween.tween_property(self, "position", original_pos - shake_dir * 2.5, 0.05)
+	tween.tween_property(self, "position", original_pos + shake_dir * 1.0, 0.04)
+	tween.tween_property(self, "position", original_pos, 0.03)
+	await tween.finished
+
 func check_teleporter():
 	GameUtils.check_and_teleport(self, Vector2.ZERO)  # ← Pas de direction pour les caisses
 	
@@ -139,6 +156,8 @@ func set_color(new_color: String):
 	color = new_color
 	# Détecte si c'est une caisse radioactive
 	is_radioactive = new_color == "radioactive"
+	# Détecte si c'est une caisse magnétique
+	is_magnet = new_color == "magnet"
 
 	var sprite = get_node_or_null("Sprite2D")
 	if sprite:
@@ -154,8 +173,11 @@ func set_color(new_color: String):
 			"metal":
 				sprite.texture = load("res://assets/Crates/crate_06.png")
 			"radioactive":
-				sprite.texture = load("res://assets/Crates/crate_06_radio+.png")
+				sprite.texture = load("res://assets/Crates/crate_06_radio.png")
 				add_radioactive_glow()
+			"magnet":
+				sprite.texture = load("res://assets/Crates/crate_49.png")
+				add_magnet_glow()
 
 func add_radioactive_glow():
 	# Crée un halo jaune fluorescent autour de la caisse radioactive
@@ -283,3 +305,88 @@ func add_radioactive_glow():
 
 		# Ajoute le deuxième jet de bulles
 		sprite.add_child(bubbles2)
+
+func add_magnet_glow():
+	# Crée un halo bleu/rouge magnétique autour de la caisse
+	var sprite = get_node_or_null("Sprite2D")
+	if sprite:
+		# Crée un PointLight2D pour le halo magnétique
+		var light = PointLight2D.new()
+		light.name = "MagnetGlow"
+		light.enabled = true
+		light.color = Color(1.0, 0.2, 0.2, 1.0)  # Rouge magnétique
+		light.energy = 1.8
+		light.texture_scale = 2.5
+		light.blend_mode = Light2D.BLEND_MODE_ADD
+
+		# Ajoute la lumière au sprite
+		sprite.add_child(light)
+
+		# Animation pulsante du halo (rouge -> bleu -> rouge)
+		var tween = create_tween()
+		tween.set_loops()
+		tween.tween_property(light, "color", Color(0.2, 0.2, 1.0), 1.2)  # Bleu
+		tween.tween_property(light, "color", Color(1.0, 0.2, 0.2), 1.2)  # Rouge
+
+		# Animation d'intensité
+		var energy_tween = create_tween()
+		energy_tween.set_loops()
+		energy_tween.tween_property(light, "energy", 2.5, 0.6)
+		energy_tween.tween_property(light, "energy", 1.2, 0.6)
+
+		# Animation de modulation de couleur du sprite
+		var color_tween = create_tween()
+		color_tween.set_loops()
+		color_tween.tween_property(sprite, "self_modulate", Color(1.2, 0.9, 0.9), 0.6)  # Légèrement rouge
+		color_tween.tween_property(sprite, "self_modulate", Color(0.9, 0.9, 1.2), 0.6)  # Légèrement bleu
+		color_tween.tween_property(sprite, "self_modulate", Color.WHITE, 0.6)
+
+		# Crée des particules magnétiques (lignes d'énergie)
+		var particles = CPUParticles2D.new()
+		particles.name = "MagnetParticles"
+		particles.emitting = true
+		particles.amount = 20
+		particles.lifetime = 1.5
+		particles.preprocess = 0.5
+
+		# Position au centre de la caisse
+		var texture_size = sprite.texture.get_size() if sprite.texture else Vector2(64, 64)
+		if sprite.centered:
+			particles.position = Vector2(0, 0)
+		else:
+			particles.position = Vector2(texture_size.x / 2, texture_size.y / 2)
+
+		# Z-index pour afficher au-dessus
+		particles.z_index = 5
+
+		# Émission circulaire
+		particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+		particles.emission_sphere_radius = 20.0
+
+		# Direction radiale (vers l'extérieur)
+		particles.direction = Vector2(0, -1)
+		particles.spread = 180.0
+
+		# Vitesse
+		particles.initial_velocity_min = 15.0
+		particles.initial_velocity_max = 30.0
+		particles.gravity = Vector2.ZERO  # Pas de gravité pour effet magnétique
+
+		# Couleur alternée rouge/bleu
+		var gradient = Gradient.new()
+		gradient.add_point(0.0, Color(1.0, 0.2, 0.2, 0.8))  # Rouge opaque
+		gradient.add_point(0.5, Color(0.5, 0.2, 0.8, 0.6))  # Violet
+		gradient.add_point(1.0, Color(0.2, 0.2, 1.0, 0.0))  # Bleu transparent
+		particles.color_ramp = gradient
+
+		# Taille des particules (petites)
+		particles.scale_amount_min = 2.0
+		particles.scale_amount_max = 4.0
+		var scale_curve = Curve.new()
+		scale_curve.add_point(Vector2(0, 0.8))
+		scale_curve.add_point(Vector2(0.5, 1.0))
+		scale_curve.add_point(Vector2(1, 0.0))
+		particles.scale_amount_curve = scale_curve
+
+		# Ajoute les particules au sprite
+		sprite.add_child(particles)

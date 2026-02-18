@@ -3,11 +3,18 @@ extends Control
 func _ready():
 	# Connecte les signaux des boutons
 	$ButtonsContainer/PlayButton.pressed.connect(_on_play_pressed)
-	$ButtonsContainer/ResetButton.pressed.connect(_on_reset_pressed) 
+	$ButtonsContainer/TutorialButton.pressed.connect(_on_tutorial_pressed)
+	$ButtonsContainer/ResetButton.pressed.connect(_on_reset_pressed)
 	$ButtonsContainer/QuitButton.pressed.connect(_on_quit_pressed)
 
 func _on_play_pressed():
 	# Lance le jeu (charge la scène Level)
+	GameMode.is_tutorial_mode = false
+	get_tree().change_scene_to_file("res://level.tscn")
+
+func _on_tutorial_pressed():
+	# Lance le tutoriel
+	GameMode.is_tutorial_mode = true
 	get_tree().change_scene_to_file("res://level.tscn")
 
 func _on_reset_pressed():

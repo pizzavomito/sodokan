@@ -1,0 +1,102 @@
+LEVEL_TUT_0_BASICS:
+text=Bienvenue dans le tutoriel !
+text=Utilise les FLÈCHES pour te déplacer.
+text=Marche vers une caisse pour la pousser.
+text=Place chaque caisse sur la cible de même couleur pour ouvrir la porte !
+###########
+#P........#
+#.R......r#
+#.........#
+#.W......w#
+#.........D
+###########
+END
+
+LEVEL_TUT_1_SPACE_PUSH:
+text=Super ! Maintenant une nouvelle mécanique.
+text=Appuie sur ESPACE pour pousser une caisse plus loin !
+text=La caisse glisse jusqu'à rencontrer un obstacle.
+############
+#P.........#
+#.W.......w#
+#..........#
+#.........D#
+############
+END
+
+LEVEL_TUT_2_UNDO:
+text=Tu peux annuler tes mouvements !
+text=Appuie sur Z pour revenir en arrière.
+text=Très utile si tu te retrouves bloqué.
+#########
+#P.W..w.#
+#.......#
+#.R...r.#
+#......D#
+#########
+END
+
+LEVEL_TUT_3_METAL_MAGNET:
+text=Voici deux nouvelles caisses spéciales.
+text=La caisse MAGNÉTIQUE attire les caisses MÉTAL vers elle !
+text=Place la caisse métal sur la cible métal pour continuer.
+############
+#P.........#
+#..M.....N.#
+#.........n#
+#..........#
+#.........D#
+############
+END
+
+LEVEL_TUT_4_RADIOACTIVE:
+text=ATTENTION ! Caisse radioactive détectée.
+text=Pousser une caisse radioactive te fait perdre 1 PV !
+text=Utilise-la quand même pour remplir la cible.
+###########
+#P........#
+#.X.....x.#
+#.........#
+#........D#
+###########
+END
+
+LEVEL_TUT_5_TELEPORTER:
+text=Ces portails sont des TÉLÉPORTEURS.
+text=Marche sur le 1 pour sortir par le 2, et vice versa !
+text=Les caisses peuvent aussi se téléporter.
+############
+#P....1....#
+#..........#
+#..W.....w.#
+#..........#
+#....2....D#
+############
+END
+
+LEVEL_TUT_6_COLLECTIBLES:
+text=Certains niveaux cachent des bonus !
+text=Le coeur te donne une vie supplémentaire.
+text=Le diamant te donne un undo supplémentaire.
+text=Collecte-les en marchant dessus.
+##########
+#P.......#
+#.W....w.#
+#...+!...#
+#........#
+#.......D#
+##########
+END
+
+LEVEL_TUT_7_FINAL:
+text=Bravo ! Tu connais toutes les mécaniques.
+text=Un dernier défi pour conclure le tutoriel.
+text=Bonne chance, et bon jeu !
+#############
+#P..........#
+#.N...M...m.#
+#...........#
+#.R.......r.#
+#..........D#
+#############
+END

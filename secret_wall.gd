@@ -17,8 +17,6 @@ func reveal():
 	tween.tween_property($Sprite2D, "modulate:a", 0.3, 0.5)
 
 	# Révèle tous les éléments cachés de la même zone
-	var level = get_parent().get_parent()
-	if level and level.has_method("reveal_secret_zone"):
-		level.reveal_secret_zone(secret_zone_id)
+	LevelSpawner.reveal_secret_zone(get_parent(), secret_zone_id)
 
 	print("🎉 Easter egg découvert ! Zone secrète ", secret_zone_id, " révélée !")
