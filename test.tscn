@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://bxivgwkqfq2rw"]
+
+[ext_resource type="Shader" uid="uid://c3bvbe5s58quc" path="res://vhs.gdshader" id="1_37kl0"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_37kl0"]
+shader = ExtResource("1_37kl0")
+shader_parameter/color_offset_multiplier = 0.004
+shader_parameter/black_offset_multiplier = 0.1
+shader_parameter/color_offset = 0.005
+shader_parameter/blur_amount = 0.0
+
+[node name="test" type="Control" unique_id=1094740863]
+z_index = 1000
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=630585516]
+material = SubResource("ShaderMaterial_37kl0")
+layout_mode = 0
+offset_right = 1168.0
+offset_bottom = 664.0

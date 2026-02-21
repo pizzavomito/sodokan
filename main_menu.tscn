@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://d2s87nsduqe71"]
 
 [ext_resource type="Script" uid="uid://cuvp4ml0vpuo1" path="res://main_menu.gd" id="1_06t4h"]
+[ext_resource type="FontFile" uid="uid://bc4v1bf5fk8st" path="res://fonts/Kenney Future.ttf" id="2_7vrkn"]
 
 [node name="MainMenu" type="Control" unique_id=640143997]
 layout_mode = 3
@@ -30,6 +31,7 @@ offset_top = 32.0
 offset_right = 1164.0
 offset_bottom = 120.0
 grow_horizontal = 2
+theme_override_fonts/font = ExtResource("2_7vrkn")
 theme_override_font_sizes/font_size = 64
 text = "SOKOBAN"
 horizontal_alignment = 1
@@ -44,6 +46,7 @@ theme_override_constants/separation = 20
 
 [node name="PlayButton" type="Button" parent="ButtonsContainer" unique_id=549492606]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("2_7vrkn")
 theme_override_font_sizes/font_size = 64
 text = "AYPL"
 

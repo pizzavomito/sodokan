@@ -7,6 +7,8 @@ var radioactive_checked = false  # ← Flag pour éviter de vérifier deux fois
 var is_magnet = false  # ← NOUVEAU : marque les caisses magnétiques
 var attached_box = null  # ← NOUVEAU : caisse attachée (pour les caisses métal collées)
 var attached_metals = []  # ← NOUVEAU : caisses métal attachées (pour les caisses magnétiques)
+var is_explosive = false  # ← Caisse explosive
+var is_exploding = false  # ← Guard pour éviter les explosions en double
 
 func push(direction):
 	# Si la caisse est déjà en train de bouger, on ne fait rien
@@ -16,8 +18,8 @@ func push(direction):
 	# Marque la caisse comme "en train d'être poussée"
 	is_pushing = true
 
-	# Crée l'effet de poussière
-	create_dust_effect(direction)
+	# Crée l'effet adapté au type de caisse
+	create_push_effect(direction)
 
 	# Calcule la position cible
 	var target_pos = position + direction * GameUtils.TILE_SIZE
@@ -34,6 +36,77 @@ func push(direction):
 
 		# Vérifie s'il y a un téléporteur
 		check_teleporter()
+	)
+
+func create_push_effect(push_direction, movement_duration = 0.15):
+	# Choisit étincelles ou poussière selon le type de caisse
+	if color == "metal" or is_magnet or is_radioactive or is_explosive:
+		create_spark_effect(push_direction, movement_duration)
+	else:
+		create_dust_effect(push_direction, movement_duration)
+
+func create_spark_effect(push_direction, movement_duration = 0.15):
+	var emit_count = 3
+	var emit_interval = movement_duration / emit_count
+	for i in range(emit_count):
+		emit_spark_burst(push_direction)
+		if i < emit_count - 1:
+			await get_tree().create_timer(emit_interval).timeout
+
+func emit_spark_burst(push_direction):
+	var sparks = CPUParticles2D.new()
+	sparks.name = "SparkEffect"
+	sparks.one_shot = true
+	sparks.emitting = true
+	sparks.amount = 16
+	sparks.lifetime = 0.4
+	sparks.explosiveness = 0.95
+
+	# Position sur le côté d'impact de la caisse (face à la direction d'arrivée du joueur)
+	var sprite = get_node_or_null("Sprite2D")
+	if sprite:
+		var texture_size = sprite.texture.get_size() if sprite.texture else Vector2(64, 64)
+		var contact_offset = -push_direction * (texture_size.x / 2)
+		if sprite.centered:
+			sparks.position = contact_offset
+		else:
+			sparks.position = Vector2(texture_size.x / 2, texture_size.y / 2) + contact_offset
+	else:
+		sparks.position = -push_direction * 24
+
+	# Étincelles partent dans la direction opposée au mouvement, avec grand spread
+	sparks.direction = -push_direction
+	sparks.spread = 70.0
+
+	# Vitesse élevée pour des étincelles rapides
+	sparks.initial_velocity_min = 80.0
+	sparks.initial_velocity_max = 180.0
+
+	# Gravité vers le bas (étincelles tombent)
+	sparks.gravity = Vector2(0, 200)
+
+	# Couleur : blanc -> jaune -> orange -> transparent
+	var gradient = Gradient.new()
+	gradient.add_point(0.0, Color(1.0, 1.0, 1.0, 1.0))   # Blanc brillant
+	gradient.add_point(0.2, Color(1.0, 0.95, 0.3, 0.9))  # Jaune vif
+	gradient.add_point(0.6, Color(1.0, 0.5, 0.1, 0.6))   # Orange
+	gradient.add_point(1.0, Color(0.8, 0.2, 0.0, 0.0))   # Rouge transparent
+	sparks.color_ramp = gradient
+
+	# Petites particules effilées
+	sparks.scale_amount_min = 1.0
+	sparks.scale_amount_max = 2.5
+	var scale_curve = Curve.new()
+	scale_curve.add_point(Vector2(0, 1.0))
+	scale_curve.add_point(Vector2(0.3, 0.8))
+	scale_curve.add_point(Vector2(1, 0.0))
+	sparks.scale_amount_curve = scale_curve
+
+	add_child(sparks)
+
+	get_tree().create_timer(sparks.lifetime + 0.1).timeout.connect(func():
+		if sparks and is_instance_valid(sparks):
+			sparks.queue_free()
 	)
 
 func create_dust_effect(push_direction, movement_duration = 0.15):
@@ -158,6 +231,8 @@ func set_color(new_color: String):
 	is_radioactive = new_color == "radioactive"
 	# Détecte si c'est une caisse magnétique
 	is_magnet = new_color == "magnet"
+	# Détecte si c'est une caisse explosive
+	is_explosive = new_color == "explosive"
 
 	var sprite = get_node_or_null("Sprite2D")
 	if sprite:
@@ -178,6 +253,10 @@ func set_color(new_color: String):
 			"magnet":
 				sprite.texture = load("res://assets/Crates/crate_49.png")
 				add_magnet_glow()
+			"explosive":
+				sprite.texture = load("res://assets/Crates/crate_06.png")
+				sprite.self_modulate = Color(1.6, 0.5, 0.0)  # Teinte orange vif
+				add_explosive_glow()
 
 func add_radioactive_glow():
 	# Crée un halo jaune fluorescent autour de la caisse radioactive
@@ -390,3 +469,117 @@ func add_magnet_glow():
 
 		# Ajoute les particules au sprite
 		sprite.add_child(particles)
+
+func add_explosive_glow():
+	var sprite = get_node_or_null("Sprite2D")
+	if not sprite:
+		return
+
+	# Halo orange pulsant
+	var light = PointLight2D.new()
+	light.name = "ExplosiveGlow"
+	light.enabled = true
+	light.color = Color(1.0, 0.4, 0.0, 1.0)  # Orange
+	light.energy = 1.5
+	light.texture_scale = 2.0
+	light.blend_mode = Light2D.BLEND_MODE_ADD
+	sprite.add_child(light)
+
+	var tween = create_tween()
+	tween.set_loops()
+	tween.tween_property(light, "energy", 2.5, 0.3)
+	tween.tween_property(light, "energy", 1.0, 0.5)
+
+	# Petites flammes qui montent
+	var texture_size = sprite.texture.get_size() if sprite.texture else Vector2(64, 64)
+	var flames = CPUParticles2D.new()
+	flames.name = "ExplosiveFlames"
+	flames.emitting = true
+	flames.amount = 12
+	flames.lifetime = 0.7
+	flames.preprocess = 0.3
+	if sprite.centered:
+		flames.position = Vector2(0, -texture_size.y * 0.3)
+	else:
+		flames.position = Vector2(texture_size.x / 2, texture_size.y / 2 - texture_size.y * 0.3)
+	flames.z_index = 10
+	flames.direction = Vector2(0, -1)
+	flames.spread = 25.0
+	flames.initial_velocity_min = 20.0
+	flames.initial_velocity_max = 45.0
+	flames.gravity = Vector2(0, -15)
+	var gradient = Gradient.new()
+	gradient.add_point(0.0, Color(1.0, 0.9, 0.1, 0.9))
+	gradient.add_point(0.3, Color(1.0, 0.4, 0.0, 0.8))
+	gradient.add_point(0.7, Color(0.8, 0.1, 0.0, 0.4))
+	gradient.add_point(1.0, Color(0.3, 0.3, 0.3, 0.0))
+	flames.color_ramp = gradient
+	flames.scale_amount_min = 2.0
+	flames.scale_amount_max = 4.5
+	var scale_curve = Curve.new()
+	scale_curve.add_point(Vector2(0, 0.3))
+	scale_curve.add_point(Vector2(0.2, 1.0))
+	scale_curve.add_point(Vector2(0.8, 0.9))
+	scale_curve.add_point(Vector2(1, 0.2))
+	flames.scale_amount_curve = scale_curve
+	sprite.add_child(flames)
+
+func explode():
+	if is_exploding:
+		return
+	is_exploding = true
+
+	# Calcule le centre de la caisse dans le repère du parent
+	var center = position
+	var sprite = get_node_or_null("Sprite2D")
+	if sprite and sprite.texture:
+		if not sprite.centered:
+			var texture_size = sprite.texture.get_size()
+			center += Vector2(texture_size.x / 2, texture_size.y / 2)
+
+	var parent = get_parent()
+	if parent:
+		create_explosion_effect_at(parent, center, is_explosive)
+
+	# Si c'est une caisse explosive, propage aux caisses adjacentes
+	if is_explosive and parent:
+		var my_tile = GameUtils.pos_to_tile(position)
+		var dirs = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
+		for dir in dirs:
+			var adj_tile = my_tile + dir
+			var adj_pos = GameUtils.tile_to_pos(adj_tile)
+			var adj_box = GameUtils.get_object_at(parent, adj_pos, "push")
+			if adj_box and is_instance_valid(adj_box) and not adj_box.is_exploding:
+				adj_box.explode()  # Pas d'await : explosions simultanées
+
+	# Attend l'effet puis se supprime
+	await get_tree().create_timer(0.3).timeout
+	if is_inside_tree():
+		queue_free()
+
+func create_explosion_effect_at(parent: Node, pos: Vector2, big: bool = true):
+	var explosion = CPUParticles2D.new()
+	explosion.one_shot = true
+	explosion.emitting = true
+	explosion.amount = 50 if big else 25
+	explosion.lifetime = 0.9
+	explosion.explosiveness = 1.0
+	explosion.position = pos
+	explosion.direction = Vector2(0, -1)
+	explosion.spread = 180.0
+	explosion.initial_velocity_min = 120.0 if big else 60.0
+	explosion.initial_velocity_max = 320.0 if big else 160.0
+	explosion.gravity = Vector2(0, 250)
+	var gradient = Gradient.new()
+	gradient.add_point(0.0, Color(1.0, 1.0, 0.4, 1.0))   # Flash jaune
+	gradient.add_point(0.2, Color(1.0, 0.5, 0.0, 0.9))   # Orange
+	gradient.add_point(0.6, Color(0.9, 0.1, 0.0, 0.6))   # Rouge
+	gradient.add_point(1.0, Color(0.2, 0.2, 0.2, 0.0))   # Fumée
+	explosion.color_ramp = gradient
+	explosion.scale_amount_min = 4.0 if big else 2.0
+	explosion.scale_amount_max = 10.0 if big else 5.0
+	parent.add_child(explosion)
+	parent.get_tree().create_timer(explosion.lifetime + 0.1).timeout.connect(func():
+		if explosion and is_instance_valid(explosion):
+			explosion.queue_free()
+	)

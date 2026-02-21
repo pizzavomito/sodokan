@@ -22,7 +22,7 @@ func _on_reset_pressed():
 	SaveManager.last_level_reached = 0
 	SaveManager.collected_lives = []
 	SaveManager.collected_undos = []
-	SaveManager.current_undos = 1
+	SaveManager.current_undos = SaveManager.STARTING_UNDOS
 	SaveManager.save_game()
 	# Lance depuis le niveau 1
 	get_tree().change_scene_to_file("res://level.tscn")

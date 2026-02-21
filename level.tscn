@@ -13,6 +13,14 @@
 [ext_resource type="AudioStream" uid="uid://b5t5qd55517c1" path="res://sounds/music_1.mp3" id="8_km5ld"]
 [ext_resource type="Texture2D" uid="uid://dgaqshd21fdxb" path="res://assets/Blocks/block_03.png" id="9_2orkt"]
 [ext_resource type="Texture2D" uid="uid://ckhsf1r6qr54c" path="res://assets/Blocks/block_01.png" id="11_8b0r0"]
+[ext_resource type="Texture2D" uid="uid://b6fs3xyaal8gk" path="res://assets/Blocks/block_09.png" id="12_v5j5c"]
+[ext_resource type="Texture2D" uid="uid://d0iqn4f7qm4r0" path="res://assets/Blocks/block_10.png" id="13_5pxul"]
+[ext_resource type="Shader" uid="uid://c22wyda56tx5n" path="res://glitch_effect.gdshader" id="14_glitch"]
+[ext_resource type="Texture2D" uid="uid://br67or6xye1wa" path="res://assets/Crates/crate_47.png" id="14_v7sqt"]
+[ext_resource type="Script" uid="uid://btr5eq1uons8r" path="res://glitch_manager.gd" id="15_glitch_mgr"]
+[ext_resource type="FontFile" uid="uid://dq3p268bs4j56" path="res://fonts/Kenney Future Narrow.ttf" id="18_42xju"]
+[ext_resource type="FontFile" uid="uid://bc4v1bf5fk8st" path="res://fonts/Kenney Future.ttf" id="19_ait7k"]
+[ext_resource type="Shader" uid="uid://c3bvbe5s58quc" path="res://vhs.gdshader" id="20_42xju"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_v5j5c"]
 texture = ExtResource("3_8b0r0")
@@ -67,14 +75,69 @@ texture = ExtResource("11_8b0r0")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4c15r"]
+texture = ExtResource("12_v5j5c")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ait7k"]
+texture = ExtResource("13_5pxul")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ilwjd"]
+texture = ExtResource("14_v7sqt")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
 [sub_resource type="TileSet" id="TileSet_8b0r0"]
 tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_8cye3")
 sources/1 = SubResource("TileSetAtlasSource_8b0r0")
 sources/2 = SubResource("TileSetAtlasSource_5pxul")
 sources/3 = SubResource("TileSetAtlasSource_fedht")
+sources/4 = SubResource("TileSetAtlasSource_4c15r")
+sources/5 = SubResource("TileSetAtlasSource_ait7k")
+sources/6 = SubResource("TileSetAtlasSource_ilwjd")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_glitch"]
+shader = ExtResource("14_glitch")
+shader_parameter/glitch_intensity = 0.322000015295
+shader_parameter/glitch_type = 1
+shader_parameter/time_offset = 4.475
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_42xju"]
+bg_color = Color(0.16924527, 0.16924533, 0.16924518, 1)
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+
+[sub_resource type="SystemFont" id="SystemFont_42xju"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ait7k"]
+content_margin_left = 10.0
+content_margin_top = 20.0
+content_margin_right = 10.0
+content_margin_bottom = 20.0
+bg_color = Color(0, 0, 0, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+anti_aliasing = false
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_v7sqt"]
+shader = ExtResource("20_42xju")
+shader_parameter/color_offset_multiplier = 0.0030000001425
+shader_parameter/black_offset_multiplier = 0.10000000149012
+shader_parameter/color_offset = 0.0010000033073799958
+shader_parameter/blur_amount = 0.0
 
 [node name="Level" type="Node2D" unique_id=1108916393]
+process_mode = 3
 y_sort_enabled = true
 script = ExtResource("1_1ainy")
 
@@ -116,6 +179,38 @@ volume_db = -5.14
 [node name="PopPlayer" type="AudioStreamPlayer" parent="." unique_id=1777435571]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1971396938]
+
+[node name="GlitchRect" type="ColorRect" parent="CanvasLayer" unique_id=1829401314]
+visible = false
+material = SubResource("ShaderMaterial_glitch")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -8.0
+offset_top = -8.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.27058825, 1, 1)
+script = ExtResource("15_glitch_mgr")
+
+[node name="LevelNameLabel" type="Label" parent="CanvasLayer" unique_id=198110918]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -256.0
+offset_right = 256.0
+offset_bottom = 63.0
+grow_horizontal = 2
+theme_override_colors/font_shadow_color = Color(0.2901961, 0.2901961, 0.2901961, 0.7921569)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("19_ait7k")
+theme_override_font_sizes/font_size = 56
+theme_override_styles/normal = SubResource("StyleBoxFlat_42xju")
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="LivesLabel" type="Label" parent="CanvasLayer" unique_id=818258662]
 z_index = 10
@@ -159,25 +254,49 @@ theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="TutorialLabel" type="Label" parent="CanvasLayer" unique_id=1125435732]
+[node name="PauseMenu" type="ColorRect" parent="CanvasLayer" unique_id=1111111111]
 visible = false
-z_index = 10
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -400.0
-offset_top = 20.0
-offset_right = 400.0
-offset_bottom = 120.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 28
-text = "Instructions du tutoriel"
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="PauseLabel" type="Label" parent="CanvasLayer/PauseMenu" unique_id=-2072745074]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -152.0
+offset_top = 188.0
+offset_right = 148.0
+offset_bottom = 268.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("18_42xju")
+theme_override_font_sizes/font_size = 56
+text = "PAUSE"
 horizontal_alignment = 1
 vertical_alignment = 1
-autowrap_mode = 3
+
+[node name="ClaudeTextLabel" type="RichTextLabel" parent="CanvasLayer/PauseMenu" unique_id=264287397]
+z_index = 1000
+layout_mode = 0
+offset_left = 296.0
+offset_top = 64.0
+offset_right = 856.0
+offset_bottom = 448.0
+theme_override_colors/default_color = Color(0, 0.49008965, 0.0037973237, 1)
+theme_override_fonts/normal_font = SubResource("SystemFont_42xju")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ait7k")
+bbcode_enabled = true
+scroll_following = true
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/PauseMenu/ClaudeTextLabel" unique_id=2067033597]
+material = SubResource("ShaderMaterial_v7sqt")
+layout_mode = 0
+offset_right = 560.0
+offset_bottom = 384.0

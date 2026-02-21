@@ -1,24 +1,56 @@
 
-LEVEL_0_TEST_MAGNET:
-text=coucou,
-text=salut
+LEVEL_0:
+level_name=Entrepôt A1
+default_ground=,
+text = 👋 Salut ! Toi, oui toi, le futur héros du rangement !"
+text = Moi c’est [b]Claude[/b]… et devine quoi ? On va faire équipe ! C’est toi qui va me diriger avec les [b]flèches[/b] du clavier 😎
+text = 📦 Règle numéro un : le rangement ! Chaque caisse a sa place, pas de bricolage.
+text = Regarde bien les marques au sol : c’est là que chaque caisse doit atterrir 🎯
+text = 🕒 Petit secret : j’ai un 'flux capacitor' made by Doc Brown… pour voyager dans le passé !
+text = Appuie sur [b]Z[/b] pour un mini bond dans le temps. Attention, ça consomme des [b]batteries[/b] 🔋
+text = Et si tu appuies sur [b]ESC[/b]… tout recommence depuis le début… mieux vaut éviter 😬
+text = Un mini bond consomme 1 batterie, le reste des actions coûte 5 batteries.
+text = Si tu n’as plus assez de batterie… oups 😱 pas de panique : on repasse au niveau précédent !
+text = Quand toutes les caisses sont bien à leur place… la porte s’ouvre 🚪✨
+text = Hop, direction l’entrepôt suivant !
+text = Allez, à toi de jouer ! Commence avec les caisses [b]en bas à droite[/b] et montre tes talents de magasinier 💪
+#########&&&&&&
+#WWWW;;;;&MWWW&
+#WWW,,,,;&M,,,D
+#M,,,,,,;&,,,W&
+_,,,,P,,;&&&,&&
+#WW,,,,,,,,,,,#
+#WWW,,,,,,WWWW#
+#WWW;;;;;,wwww#
 ###############
-#P............#
-#..M....N.M...#
-#.............#
-#.M...N...W...#
-#..........X..#
-#.............#
-#..N..M.....nn#
-#########D#####
 END
 
-LEVEL_1
+LEVEL_1:
+level_name=Entrepôt A2
+default_ground=,
+text = 💖 Petit truc important : ma santé est représentée par des cœurs !
+text = Pas d’inquiétude, je ne peux pas en perdre tout de suite, donc profitons pour nous amuser tranquille 😎
+text = Mais si je perds toutes mes vies… oups 😱
+text = Alors je devrai faire un [b]grand saut dans le passé[/b] et retourner au niveau précédent !
+text = Allez, au travail ! Faut ranger ce bazar ! 💪
+#########&&&&&&
+#WWWW,,,,&;W;;&
+_P,,,, ,,,,,,,,D
+#M,,,,,,,&;;W;&
+#,W,,,,,,&&&&&&
+#,W,,,,,,,,,,,#
+#,W,,,,,,,MWRG#
+#,WWWW,,,,mwrg#
+###############
+END
+
+LEVEL_1:
+
 #####D####
+_P.....###
+#mMw.W.$^#
 #......###
-#mMw.WP$^#
-#......###
-#........#
+#........D
 ##########
 END
 

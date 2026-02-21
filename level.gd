@@ -6,10 +6,9 @@ const POP_SOUND = preload("res://sounds/pop.mp3")
 var previous_boxes_on_targets = 0
 
 var lives = 3  # nombre de vies
-var checkpoint_level = 0
 # Système Undo
 var undo_history = []  # Array pour stocker l'historique
-var max_undo_steps = 10  # Max 10 étapes
+var max_undo_steps = 30  # Max 10 étapes
 var currently_saving = false
 
 var current_level = 0  # Index du niveau actuel
@@ -17,7 +16,9 @@ var levels_data = []  # Tableau contenant tous les niveaux chargés
 var checking_win = true  # Active/désactive la vérification de victoire
 var is_tutorial = false  # Mode tutoriel
 var dialog_texts = []    # File des textes à afficher
-var dialog_active = false  # Bloque le joueur pendant le dialogue
+var dialog_generation = 0
+var is_paused = false  # Menu pause actif
+var level_generation: int = 0  # Incrémenté à chaque load_level
 
 # Mode dev : saut de niveau
 var level_jump_input = ""  # Numéro en cours de saisie
@@ -32,7 +33,6 @@ func _ready():
 	# En mode tutoriel, on commence toujours au niveau 0
 	if is_tutorial:
 		current_level = 0
-		checkpoint_level = 0
 	else:
 		current_level = SaveManager.last_level_reached
 
@@ -40,9 +40,6 @@ func _ready():
 			current_level = 0
 			SaveManager.last_level_reached = 0
 			SaveManager.save_game()
-
-		# Calcule le checkpoint (niveau 0, 10, 20, 30...)
-		checkpoint_level = int(current_level / 10) * 10
 
 	# Initialise le système audio
 	LevelAudio.setup(
@@ -196,11 +193,15 @@ func load_levels():
 										if not attributes.has("texts"):
 											attributes["texts"] = []
 										attributes["texts"].append(value)
+									elif key == "glitch":
+										if not attributes.has("glitchs"):
+											attributes["glitchs"] = []
+										attributes["glitchs"].append(_parse_glitch_config(value))
 									else:
 										attributes[key] = value
 							continue
 					# Garde seulement les lignes qui commencent par #
-					if line.begins_with("#"):
+					if line.begins_with("#") or line.begins_with("_"):
 						if reading_floors:
 							floor_lines.append(line)
 						else:
@@ -220,6 +221,7 @@ func load_level(level_index):
 
 	checking_win = false
 	previous_boxes_on_targets = 0
+	level_generation += 1
 
 	# Réinitialise correctement
 	undo_history.clear()
@@ -237,6 +239,8 @@ func load_level(level_index):
 	var default_ground = attributes.get("default_ground", ".")
 	var override_wall = attributes.get("override_wall", null)
 	var container = get_node("LevelContainer")
+	var levelName = attributes.get("level_name", "")
+	update_level_name(levelName)
 
 	# Lance le dialogue si des textes sont définis
 	var texts = attributes.get("texts", [])
@@ -305,7 +309,7 @@ func load_level(level_index):
 					if not SaveManager.is_life_collected(current_level):
 						LevelSpawner.spawn_hidden_life_pickup(container, pos, current_level, 0)
 
-				"#", "&", "@", "%":  # Murs variés
+				"#", "&", "@", "%", "|", "_":  # Murs variés
 					var wall_layer = container.get_node_or_null("Wall")
 					if wall_layer:
 						var wall_char = override_wall if override_wall else char
@@ -316,12 +320,19 @@ func load_level(level_index):
 							source_id = 2
 						elif wall_char == "%":
 							source_id = 3
+						elif wall_char == "|":
+							source_id = 4
+						elif wall_char == "_":
+							source_id = 6
 						wall_layer.set_cell(Vector2i(x, y), source_id, Vector2i(0, 0), 0)
 
 				"P":  # Joueur
 					var player = container.get_node_or_null("Player")
 					if player:
 						player.position = pos
+						player.is_moving = false
+						player.is_pushing = false
+						player.input_cooldown = 0.0
 
 				"D":  # Porte
 					LevelSpawner.spawn_door(container, pos, current_level)
@@ -337,6 +348,7 @@ func load_level(level_index):
 				"M":  LevelSpawner.spawn_box(container, pos, "metal")
 				"X":  LevelSpawner.spawn_box(container, pos, "radioactive")
 				"N":  LevelSpawner.spawn_box(container, pos, "magnet")
+				"E":  LevelSpawner.spawn_box(container, pos, "explosive")
 
 				# === CIBLES ===
 				"r":  LevelSpawner.spawn_target(container, pos, "red")
@@ -353,6 +365,12 @@ func load_level(level_index):
 
 	center_level()
 	LevelAudio.change_music_for_level(level_index)
+
+	# Configure les effets glitch
+	#var glitch_rect = get_node_or_null("LevelContainer/GlitchRect")
+	#if glitch_rect:
+		#var glitchs = attributes.get("glitchs", [])
+		#glitch_rect.setup(glitchs)
 
 	await get_tree().process_frame
 
@@ -378,6 +396,11 @@ func center_level():
 	)
 
 func clear_level():
+	# Stoppe les glitchs
+	#var glitch_rect = get_node_or_null("CanvasLayer/GlitchRect")
+	#if glitch_rect:
+		#glitch_rect.stop_all()
+
 	var container = get_node_or_null("LevelContainer")
 	if not container:
 		return
@@ -396,10 +419,31 @@ func clear_level():
 		if child.is_in_group("level_objects"):
 			child.queue_free()
 
+	print("dialog_generation :", dialog_generation)
+	dialog_generation += 1
+
 func _process(delta):
+	if is_paused:
+		var label = get_node_or_null("CanvasLayer/PauseMenu/ClaudeTextLabel")
+		if label:
+			var scrollbar = label.get_v_scroll_bar()
+			if Input.is_action_pressed("ui_down"):
+				scrollbar.value += 200 * delta
+			if Input.is_action_pressed("ui_up"):
+				scrollbar.value -= 200 * delta
+		return
 	# Vérifie à chaque frame si le niveau est gagné (seulement si activé)
 	if checking_win:
 		check_win()
+		
+		
+
+func toggle_pause():
+	is_paused = not is_paused
+	get_tree().paused = is_paused
+	var pause_menu = get_node_or_null("CanvasLayer/PauseMenu")
+	if pause_menu:
+		pause_menu.visible = is_paused
 
 func check_win():
 	var container = get_node_or_null("LevelContainer")
@@ -479,7 +523,15 @@ func update_lives_display():
 	var lives_label = get_node_or_null("CanvasLayer/LivesLabel")
 	if lives_label:
 		lives_label.text = "❤️x " + str(lives)
-
+		
+func update_level_name(name):
+	var level_name = get_node_or_null("CanvasLayer/LevelNameLabel")
+	if level_name:
+		if is_tutorial:
+			level_name.text = "Tutoriel " +name
+		else:
+			level_name.text = name
+			
 func update_level_display():
 	var level_label = get_node_or_null("CanvasLayer/LevelLabel")
 	if level_label:
@@ -527,7 +579,7 @@ func animate_heart_loss():
 
 		await tween.finished
 
-func animate_life_loss():
+func animate_life_loss(with_fade_in: bool = true) -> void:
 	var pop_player = get_node_or_null("PopPlayer")
 	if pop_player:
 		pop_player.stream = POP_SOUND
@@ -535,26 +587,27 @@ func animate_life_loss():
 
 	await fade_out_level(0.1)
 
-	var lives_label = get_node_or_null("CanvasLayer/LivesLabel")
-	if lives_label:
-		var original_y = lives_label.position.y
+	var undos_label = get_node_or_null("CanvasLayer/UndosLabel")
+	if undos_label:
+		var original_y = undos_label.position.y
 
 		var tween = create_tween()
 
-		tween.tween_property(lives_label, "position:y", original_y + 10, 0.1)
-		tween.tween_property(lives_label, "position:y", original_y - 10, 0.1)
-		tween.tween_property(lives_label, "position:y", original_y, 0.1)
+		tween.tween_property(undos_label, "position:y", original_y + 10, 0.1)
+		tween.tween_property(undos_label, "position:y", original_y - 10, 0.1)
+		tween.tween_property(undos_label, "position:y", original_y, 0.1)
 
-		tween.parallel().tween_property(lives_label, "modulate", Color.WHITE, 0.15)
-		tween.tween_property(lives_label, "modulate", Color.RED, 0.15)
-		tween.tween_property(lives_label, "modulate", Color.WHITE, 0.15)
+		tween.parallel().tween_property(undos_label, "modulate", Color.WHITE, 0.15)
+		tween.tween_property(undos_label, "modulate", Color.RED, 0.15)
+		tween.tween_property(undos_label, "modulate", Color.WHITE, 0.15)
 
-		tween.parallel().tween_property(lives_label, "scale", Vector2(1.2, 1.2), 0.1)
-		tween.tween_property(lives_label, "scale", Vector2(1.0, 1.0), 0.1)
+		tween.parallel().tween_property(undos_label, "scale", Vector2(1.2, 1.2), 0.1)
+		tween.tween_property(undos_label, "scale", Vector2(1.0, 1.0), 0.1)
 
 		await tween.finished
 
-	await fade_in_level(0.3)
+	if with_fade_in:
+		await fade_in_level(0.3)
 
 func animate_undo():
 	var pop_player = get_node_or_null("PopPlayer")
@@ -595,13 +648,6 @@ func next_level():
 		# +1 undo quand on passe un niveau
 		SaveManager.add_undo()
 
-		var new_checkpoint = int(current_level / 10) * 10
-		if new_checkpoint > checkpoint_level:
-			checkpoint_level = new_checkpoint
-			lives = 3
-			SaveManager.reset_undos_at_checkpoint()
-			print("Nouveau checkpoint au niveau ", checkpoint_level, " - Undos reset à 1")
-
 	# Vérifie si le tutoriel est terminé
 	if is_tutorial and current_level >= levels_data.size():
 		checking_win = false
@@ -623,40 +669,53 @@ func next_level():
 	checking_win = true
 
 func restart_level():
-	await animate_life_loss()
+	if SaveManager.current_undos >= 5:
+		# Assez d'undos : perd 5 et recommence le niveau actuel
+		for i in range(5):
+			SaveManager.use_undo()
 
-	lives -= 1
-	print("Vies restantes : ", lives)
+		await animate_life_loss(false)
 
-	var target_level = current_level
+		print("Restart niveau ", current_level, " (-5 undos)")
 
-	if lives <= 0:
-		if current_level > checkpoint_level:
-			target_level = current_level - 1
-			lives = 1
-			print("Game Over ! Retour au niveau ", target_level, " avec 1 vie")
-		else:
-			target_level = checkpoint_level
-			lives = 1
-			print("Game Over ! Bloqué au checkpoint niveau ", checkpoint_level, " avec 1 vie")
+		SaveManager.last_level_reached = current_level
+		SaveManager.save_game()
+		undo_history.clear()
+		checking_win = false
+		previous_boxes_on_targets = 0
+		currently_saving = false
+
+		update_undos_display()
+		update_level_display()
+
+		load_level(current_level)
+		await get_tree().process_frame
+		checking_win = true
+		await fade_in_level(0.3)
 	else:
-		print("Recommence le niveau ", current_level)
+		# Pas assez d'undos : va au niveau précédent et gagne 1 undo
+		if current_level > 0:
+			current_level -= 1
+		SaveManager.add_undo()
 
-	current_level = target_level
-	SaveManager.last_level_reached = current_level
-	SaveManager.save_game()
-	undo_history.clear()
-	checking_win = false
-	previous_boxes_on_targets = 0
-	currently_saving = false
+		await animate_life_loss(false)
 
-	update_lives_display()
-	update_undos_display()
-	update_level_display()
+		print("Pas assez d'undos ! Retour au niveau ", current_level, " (+1 undo)")
 
-	load_level(current_level)
-	await get_tree().process_frame
-	checking_win = true
+		SaveManager.last_level_reached = current_level
+		SaveManager.save_game()
+		undo_history.clear()
+		checking_win = false
+		previous_boxes_on_targets = 0
+		currently_saving = false
+
+		update_undos_display()
+		update_level_display()
+
+		load_level(current_level)
+		await get_tree().process_frame
+		checking_win = true
+		await fade_in_level(0.3)
 
 func player_lose_life():
 	lives -= 1
@@ -671,21 +730,23 @@ func player_lose_life():
 
 	print("Game Over ! Perte de toutes les vies")
 	await animate_heart_loss()
-	await fade_out_level(0.1)
-	await fade_in_level(0.3)
 
-	var target_level = current_level
-
-	if current_level > checkpoint_level:
-		target_level = current_level - 1
+	if SaveManager.current_undos >= 5:
+		# Assez d'undos : perd 5 et recommence le niveau actuel
+		for i in range(5):
+			SaveManager.use_undo()
 		lives = 1
-		print("Retour au niveau ", target_level, " avec 1 vie")
+		print("Retour au début du niveau ", current_level, " (-5 undos)")
 	else:
-		target_level = checkpoint_level
+		# Pas assez d'undos : va au niveau précédent et gagne 1 undo
+		if current_level > 0:
+			current_level -= 1
+		SaveManager.add_undo()
 		lives = 1
-		print("Bloqué au checkpoint niveau ", checkpoint_level, " avec 1 vie")
+		print("Pas assez d'undos ! Retour au niveau ", current_level, " (+1 undo)")
 
-	current_level = target_level
+	await fade_out_level(0.1)
+
 	SaveManager.last_level_reached = current_level
 	SaveManager.save_game()
 	undo_history.clear()
@@ -700,12 +761,18 @@ func player_lose_life():
 	load_level(current_level)
 	await get_tree().process_frame
 	checking_win = true
+	await fade_in_level(0.3)
 
 func _input(event):
-	# Dialogue actif : n'importe quelle touche avance, et bloque tout le reste
-	if dialog_active:
-		if event is InputEventKey and event.pressed and not event.echo:
-			advance_dialog()
+	# Touche Entrée pour ouvrir/fermer le menu pause (hors dialogue et hors saisie de niveau)
+	if event is InputEventKey and event.pressed and not event.echo:
+		if (event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER) and level_jump_input == "":
+			toggle_pause()
+			get_viewport().set_input_as_handled()
+			return
+
+	# Si en pause, on bloque tout le reste
+	if is_paused:
 		get_viewport().set_input_as_handled()
 		return
 
@@ -781,8 +848,6 @@ func jump_to_level(level_number: int):
 	SaveManager.last_level_reached = current_level
 	SaveManager.save_game()
 
-	checkpoint_level = int(current_level / 10) * 10
-
 	undo_history.clear()
 	previous_boxes_on_targets = 0
 	currently_saving = false
@@ -796,35 +861,57 @@ func _load_level_deferred(level_index: int):
 	checking_win = true
 	print("✅ Niveau ", level_index, " chargé")
 
+func _parse_glitch_config(value: String) -> Dictionary:
+	# Parse le format [type=1, count=3, delay=2.0, duration=0.3]
+	var config = {}
+	var cleaned = value.strip_edges()
+	if cleaned.begins_with("[") and cleaned.ends_with("]"):
+		cleaned = cleaned.substr(1, cleaned.length() - 2)
+	var pairs = cleaned.split(",")
+	for pair in pairs:
+		pair = pair.strip_edges()
+		if "=" in pair:
+			var kv = pair.split("=", false, 1)
+			if kv.size() == 2:
+				var k = kv[0].strip_edges()
+				var v = kv[1].strip_edges()
+				if k == "type":
+					config["type"] = int(v)
+				elif k == "count":
+					config["count"] = int(v)
+				elif k == "delay":
+					config["delay"] = float(v)
+				elif k == "duration":
+					config["duration"] = float(v)
+	return config
 # ========== FONCTIONS TUTORIEL ==========
 
 func start_dialog(texts: Array):
 	dialog_texts = texts.duplicate()
-	dialog_active = true
 	show_dialog_page()
 
 func show_dialog_page():
-	var label = get_node_or_null("CanvasLayer/TutorialLabel")
+	var my_generation = dialog_generation
+
+	var label = get_node_or_null("CanvasLayer/PauseMenu/ClaudeTextLabel")
+
 	if not label:
 		return
-	label.text = dialog_texts[0]
+
+	toggle_pause()
 	label.visible = true
+	label.text = ""
 	label.modulate.a = 0.0
 	var tween = create_tween()
 	tween.tween_property(label, "modulate:a", 1.0, 0.3)
 
-func advance_dialog():
-	dialog_texts.pop_front()
-	if dialog_texts.size() > 0:
-		show_dialog_page()
-	else:
-		# Plus de texte : on cache le label et on débloque le joueur
-		dialog_active = false
-		var label = get_node_or_null("CanvasLayer/TutorialLabel")
-		if label:
-			var tween = create_tween()
-			tween.tween_property(label, "modulate:a", 0.0, 0.3)
-			tween.finished.connect(func(): label.visible = false)
+	for text in dialog_texts:
+		if my_generation != dialog_generation:
+			return
+		label.text += " >: " + text + "\n"
+		await get_tree().create_timer(randf_range(2.0, 5.0)).timeout
+		if my_generation != dialog_generation:
+			return
 
 func check_tutorial_completion():
 	if is_tutorial and current_level >= levels_data.size():

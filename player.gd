@@ -113,7 +113,14 @@ func move(direction, animation_name):
 
 		# ← NOUVEAU : Vérifie si c'est une caisse radioactive
 		if box.is_radioactive:
+			var _level = get_parent().get_parent()
+			var _gen = _level.level_generation if _level else 0
 			await check_radioactive_hit()
+			if not is_inside_tree():
+				return
+			if _level and _level.level_generation != _gen:
+				is_moving = false
+				return
 	else:
 		# Pas de caisse : joue le son de marche
 		$WalkSound.play()
@@ -305,7 +312,10 @@ func push_box_chain(box, direction, is_direct_push = true, has_moved = false):
 	# Vérifie s'il y a un mur
 	if has_wall_at(target_pos):
 		if has_moved:
-			await box.shake_impact(direction)
+			if box.is_explosive:
+				await box.explode()
+			else:
+				await box.shake_impact(direction)
 		return
 
 	# Vérifie s'il y a une autre caisse à la position cible
@@ -321,14 +331,17 @@ func push_box_chain(box, direction, is_direct_push = true, has_moved = false):
 		await push_box_chain(next_box, direction, false)
 		# Cette caisse ne se déplace pas (elle s'arrête)
 		if has_moved:
-			await box.shake_impact(direction)
+			if box.is_explosive:
+				await box.explode()
+			else:
+				await box.shake_impact(direction)
 		return
 
 	# Marque la caisse comme poussée
 	box.is_pushing = true
 
-	# Crée l'effet de poussière
-	box.create_dust_effect(direction, 0.15)
+	# Crée l'effet adapté au type de caisse (poussière ou étincelles)
+	box.create_push_effect(direction, 0.15)
 
 	# Crée l'effet de vitesse (traînées fantômes)
 	box.create_speed_effect(0.15)
