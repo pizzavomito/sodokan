@@ -15,46 +15,193 @@ text = Quand toutes les caisses sont bien à leur place… la porte s’ouvre �
 text = Hop, direction l’entrepôt suivant !
 text = Allez, à toi de jouer ! Commence avec les caisses [b]en bas à droite[/b] et montre tes talents de magasinier 💪
 #########&&&&&&
-#WWWW;;;;&MWWW&
-#WWW,,,,;&M,,,D
-#M,,,,,,;&,,,W&
-_,,,,P,,;&&&,&&
-#WW,,,,,,,,,,,#
-#WWW,,,,,,WWWW#
-#WWW;;;;;,wwww#
+#WWWW  [ &MWWW&
+#WWW     &M   D
+#       [&!  W&
+_P       &&& &&
+#             #
+#WWW      WWWW#
+#WWW[[[[  wwww#
 ###############
+
+FLOORS:
+,,,,,,,,,,,,,,,
+,,,,,;;;;,::::,
+,,,,,,,,;,:::::
+,,,,,,,,;,::::,
+,,,,,,,,;,,,:,,
+,,,,,,,,,,,,,,,
+,,,,,;;;,,,,,,,
+,,,,;;;;;,,,,,,
+,,,,,,,,,,,,,,,
 END
 
 LEVEL_1:
 level_name=Entrepôt A2
 default_ground=,
+rot=10,1,180
+rot=9,2,270
+rot=11,2,90
 text = 💖 Petit truc important : ma santé est représentée par des cœurs !
 text = Pas d’inquiétude, je ne peux pas en perdre tout de suite, donc profitons pour nous amuser tranquille 😎
 text = Mais si je perds toutes mes vies… oups 😱
 text = Alors je devrai faire un [b]grand saut dans le passé[/b] et retourner au niveau précédent !
 text = Allez, au travail ! Faut ranger ce bazar ! 💪
-#########&&&&&&
-#WWWW,,,,&;W;;&
-_P,,,, ,,,,,,,,D
-#M,,,,,,,&;;W;&
-#,W,,,,,,&&&&&&
-#,W,,,,,,,,,,,#
-#,W,,,,,,,MWRG#
-#,WWWW,,,,mwrg#
+&&&&&&&&&&&&&&&
+&WWW  WW& é   &
+_P  W WW&éàé  D
+&M   WMm& é   &
+&&&&&  &&&&& &&
+#wW           #
+#wW          ]#
+#wW  w  [  [  #
 ###############
+
+FLOORS:
+,,,,,,,,,,,,,,,
+,:::::::::::::,
+,:::::::::::::,
+,:::::::::::::,
+,,,,,::,,,,::,,
+,,,,,,,,,,,,,,,
+,,,,,,;;;;;;;;,
+,,,,,,;;;;;;;;,
+,,,,,,,,,,,,,,,
 END
 
-LEVEL_1:
-
-#####D####
-_P.....###
-#mMw.W.$^#
-#......###
-#........D
+LEVEL_2:
+level_name=Réserve A3
+default_ground=:
+text = Ah, on a un petit problème ici !
+text = Mauvaise nouvelle : je ne peux que pousser les caisses… les tirer ? Même pas en rêve.
+text = Mais bonne nouvelle : j’ai une technique secrète 😏
+text = Avec la touche [b]Espace[/b], je peux donner un GRAND coup de pied !
+text = Place-toi bien derrière la caisse en bois.
+text = Puis utilise [b]Espace[/b] pour l’envoyer valser vers la caisse en métal.
+######D###
+_P     ###
+#  W   $^#
+#      ###
+#MMMMMMMM#
+#MMMMMMMM#
+#MMmMMMMM#
 ##########
 END
 
-LEVEL_2
+LEVEL_3:
+level_name=Réserve A4
+default_ground=:
+####D####
+#WWW   w#
+#WWW   w#
+#wW WW###
+#     MM#
+#RR  P  #
+#####_###
+END
+
+LEVEL_4:
+level_name=Réserve A5
+default_ground=:
+######D##
+##ww## ##
+#      b#
+# W   BB#
+# W   $+#
+#   P ###
+####_####
+END
+
+LEVEL_5:
+level_name=Réserve A6
+default_ground=:
+##########
+#w       D
+#MMM #W  #
+#     W M#
+#   P#wMM#
+####_#####
+END
+
+LEVEL_6:
+level_name=Hangar A7
+default_ground=:
+#####D####
+#w# MM #w#
+#        #
+#  #BB#  #
+_P       #
+##W#  #W##
+##b    b##
+##########
+END
+
+LEVEL_7:
+level_name=Hangar A8
+default_ground=:
+############
+##   ww   ##
+##  W W # ##
+###  #     D
+#^$   W  ###
+#####W #####
+#w   P    w#
+#####_######
+END
+
+LEVEL_8:
+level_name=Hangar A9
+default_ground=,
+#######D#######
+#  Mw         #
+#   W  #   W  #
+_P  MM m   G m#
+#RR       GG  #
+#RR    M  GG  #
+#m           w#
+###############
+END
+
+LEVEL_9:
+level_name=Passage Vert
+default_ground=,
+#######D#######
+#             #
+#     M€M     #
+#             #
+#      M      #
+#             #
+#             #
+#      P      #
+#######_#######
+
+FLOORS:
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,;;;;;,;;;;;,,
+,,;;;;;,;;;;;,,
+,,;;;;;,;;;;;,,
+,,;;;;;,;;;;;,,
+,,;;;;;,;;;;;,,
+,,,,,,,,,,,,,,,
+,,,,,,,_,,,,,,,
+END
+
+
+LEVEL_10:
+default_ground=*
+override_ground=*
+override_wall:#
+||||||||||
+|.wMw.W. |
+|..|||.. |
+|....WM. |
+|....... |
+|.P......D
+||||||||||
+END
+
+LEVEL_NE_pas_supprimer:
 #############
 #m.m.xxxM..2#
 #..M..rXMMM##
@@ -65,42 +212,6 @@ LEVEL_2
 #####D#######
 END
 
-LEVEL_2
-##########
-#w.......D
-#MMM..W..#
-#.....W..#
-#P...&w&.#
-##########
-END
-
-LEVEL_3
-########
-#w.....D
-#MWW...#
-#.P..w##
-########
-END
-
-LEVEL_4
-#########
-#P.....w#
-#..#...w#
-#wW.WW###
-#.......#
-#RR.....D
-#########
-END
-
-LEVEL_5
-#########
-##ww##P##
-#......b#
-#.W...BB#
-#.W...$+#
-#...M.###
-####D####
-END
 
 LEVEL_6
 ##########
@@ -112,27 +223,9 @@ LEVEL_6
 ##########
 END
 
-LEVEL_7
-##########
-#w#.MM.#w#
-#........#
-#..&BB&..D
-#........#
-#&W&..&W&#
-#&b.P..b&#
-##########
-END
 
-LEVEL_8
-############
-##...ww...##
-##..W.W.&.##
-###..&.....D
-#^$...W..###
-#&&&&W.&&&&#
-#w...P....w#
-############
-END
+
+
 
 LEVEL_9
 #########
@@ -394,15 +487,15 @@ LEVEL_33
 ################
 END
 
-LEVEL_TEST
+LEVEL_TEST:
 ##########
 #P..W..w.#
 #........#
-#.B....b.#
+#.B.;..b.#
 #.......D#
 ##########
 
-FLOORS
+FLOORS:
 ##########
 #,,,,;;;;#
 #::::::::#

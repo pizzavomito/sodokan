@@ -22,6 +22,7 @@ func collect():
 	
 	# Cache le sprite
 	$Sprite2D.visible = false
+	$Label.visible = false
 	
 	# Son
 	var sound = get_node_or_null("PickupSound")

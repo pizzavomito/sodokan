@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://cesgl2wuddntd"]
 
 [ext_resource type="Script" uid="uid://cgqpl65xbs6w" path="res://door.gd" id="1_0phs7"]
-[ext_resource type="Texture2D" uid="uid://23d6qi72e5dt" path="res://assets/Crates/crate_46.png" id="2_0phs7"]
-[ext_resource type="Texture2D" uid="uid://br67or6xye1wa" path="res://assets/Crates/crate_47.png" id="3_50cdl"]
+[ext_resource type="Texture2D" uid="uid://btjruim5kb7kj" path="res://assets/Environment/tile_434.png" id="2_0phs7"]
+[ext_resource type="Texture2D" uid="uid://cquncortdm7p6" path="res://assets/Environment/tile_438.png" id="3_50cdl"]
 
 [node name="Door" type="Node2D" unique_id=1988623561]
 script = ExtResource("1_0phs7")

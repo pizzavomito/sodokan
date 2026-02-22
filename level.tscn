@@ -9,26 +9,72 @@
 [ext_resource type="Texture2D" uid="uid://dcmn7t724osng" path="res://assets/Ground/background_brown.png" id="3_aicyk"]
 [ext_resource type="PackedScene" uid="uid://y36vx6sd8gig" path="res://player.tscn" id="4_0b4ue"]
 [ext_resource type="Texture2D" uid="uid://nokq5qcj54aw" path="res://assets/Blocks/block_02.png" id="4_i2t4f"]
+[ext_resource type="Texture2D" uid="uid://65ocjtxg55ok" path="res://assets/Ground/tile_12.png" id="5_f8y3u"]
+[ext_resource type="Texture2D" uid="uid://p07xvidkfa7l" path="res://assets/Ground/tile_13.png" id="6_0k1o5"]
 [ext_resource type="Texture2D" uid="uid://cbuiitvemwctw" path="res://assets/Blocks/block_08.png" id="7_8cye3"]
+[ext_resource type="Texture2D" uid="uid://bpiv40qrve6n5" path="res://assets/Ground/tile_96.png" id="7_k1ecl"]
+[ext_resource type="Texture2D" uid="uid://c0f7835ne7atk" path="res://assets/Ground/tile_98.png" id="8_8kok0"]
+[ext_resource type="Texture2D" uid="uid://cqe31wnx7eqqx" path="res://assets/Ground/tile_01.png" id="8_fj6e6"]
 [ext_resource type="AudioStream" uid="uid://b5t5qd55517c1" path="res://sounds/music_1.mp3" id="8_km5ld"]
+[ext_resource type="Texture2D" uid="uid://csgx7tras8org" path="res://assets/Ground/tile_02.png" id="9_2h3vt"]
 [ext_resource type="Texture2D" uid="uid://dgaqshd21fdxb" path="res://assets/Blocks/block_03.png" id="9_2orkt"]
+[ext_resource type="Texture2D" uid="uid://jtu6d2yva0pm" path="res://assets/Ground/tile_03.png" id="10_yjxuc"]
 [ext_resource type="Texture2D" uid="uid://ckhsf1r6qr54c" path="res://assets/Blocks/block_01.png" id="11_8b0r0"]
+[ext_resource type="Texture2D" uid="uid://cj8a6vo22cry0" path="res://assets/Ground/tile_04.png" id="11_hvubb"]
 [ext_resource type="Texture2D" uid="uid://b6fs3xyaal8gk" path="res://assets/Blocks/block_09.png" id="12_v5j5c"]
 [ext_resource type="Texture2D" uid="uid://d0iqn4f7qm4r0" path="res://assets/Blocks/block_10.png" id="13_5pxul"]
 [ext_resource type="Shader" uid="uid://c22wyda56tx5n" path="res://glitch_effect.gdshader" id="14_glitch"]
+[ext_resource type="Texture2D" uid="uid://cquuus4qxh61i" path="res://assets/Ground/tile_11.png" id="14_k1ecl"]
+[ext_resource type="Texture2D" uid="uid://6tri5cb1sif5" path="res://assets/Blocks/tile_502.png" id="14_mleqk"]
 [ext_resource type="Texture2D" uid="uid://br67or6xye1wa" path="res://assets/Crates/crate_47.png" id="14_v7sqt"]
+[ext_resource type="Texture2D" uid="uid://bvpowhcuhrgft" path="res://assets/Blocks/tile_503.png" id="15_6btg4"]
 [ext_resource type="Script" uid="uid://btr5eq1uons8r" path="res://glitch_manager.gd" id="15_glitch_mgr"]
+[ext_resource type="Texture2D" uid="uid://bta7c0prrt56s" path="res://assets/Blocks/tile_447.png" id="16_dtg4e"]
+[ext_resource type="Texture2D" uid="uid://bwkun3s8iwuur" path="res://assets/Blocks/tile_448.png" id="17_ut2i6"]
+[ext_resource type="Texture2D" uid="uid://by21kxdalss2w" path="res://assets/Blocks/tile_449.png" id="18_0mnfp"]
 [ext_resource type="FontFile" uid="uid://dq3p268bs4j56" path="res://fonts/Kenney Future Narrow.ttf" id="18_42xju"]
 [ext_resource type="FontFile" uid="uid://bc4v1bf5fk8st" path="res://fonts/Kenney Future.ttf" id="19_ait7k"]
+[ext_resource type="Texture2D" uid="uid://bnd1uh56j8rf8" path="res://assets/Blocks/tile_505.png" id="19_uuqa8"]
+[ext_resource type="Texture2D" uid="uid://15lap21op8vh" path="res://assets/Blocks/tile_183.png" id="19_yjxuc"]
 [ext_resource type="Shader" uid="uid://c3bvbe5s58quc" path="res://vhs.gdshader" id="20_42xju"]
+[ext_resource type="Texture2D" uid="uid://hbybk1f7br1f" path="res://assets/Blocks/tile_186.png" id="20_hvubb"]
+[ext_resource type="Texture2D" uid="uid://dwvb7lpgkvvrb" path="res://assets/Blocks/tile_506.png" id="20_samc1"]
+[ext_resource type="Texture2D" uid="uid://ydscmr41htlp" path="res://assets/Blocks/tile_510.png" id="21_oaehd"]
+[ext_resource type="Texture2D" uid="uid://ctbbg0cj082ev" path="res://assets/Blocks/tile_511.png" id="22_f8y3u"]
+[ext_resource type="Texture2D" uid="uid://dxu2qcvjcjeq2" path="res://assets/Blocks/tile_501.png" id="23_sl4om"]
+[ext_resource type="Texture2D" uid="uid://cquncortdm7p6" path="res://assets/Environment/tile_438.png" id="28_8kok0"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_v5j5c"]
+resource_name = "."
 texture = ExtResource("3_8b0r0")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1ainy"]
+resource_name = ","
 texture = ExtResource("2_oi3di")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_td4uw"]
+resource_name = "/"
+texture = ExtResource("5_f8y3u")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_r5f7e"]
+resource_name = "£"
+texture = ExtResource("6_0k1o5")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_na3no"]
+texture = ExtResource("7_k1ecl")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_07udg"]
+texture = ExtResource("8_8kok0")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
@@ -47,6 +93,32 @@ texture = ExtResource("3_aicyk")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_aoqsc"]
+texture = ExtResource("8_fj6e6")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mleqk"]
+texture = ExtResource("9_2h3vt")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6btg4"]
+texture = ExtResource("10_yjxuc")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_sl4om"]
+texture = ExtResource("11_hvubb")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wp8k7"]
+resource_name = ":"
+texture = ExtResource("14_k1ecl")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
 [sub_resource type="TileSet" id="TileSet_oi3di"]
 tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_v5j5c")
@@ -54,28 +126,102 @@ sources/1 = SubResource("TileSetAtlasSource_1ainy")
 sources/2 = SubResource("TileSetAtlasSource_aicyk")
 sources/3 = SubResource("TileSetAtlasSource_2orkt")
 sources/4 = SubResource("TileSetAtlasSource_h6smj")
+sources/5 = SubResource("TileSetAtlasSource_aoqsc")
+sources/6 = SubResource("TileSetAtlasSource_mleqk")
+sources/7 = SubResource("TileSetAtlasSource_6btg4")
+sources/8 = SubResource("TileSetAtlasSource_sl4om")
+sources/9 = SubResource("TileSetAtlasSource_wp8k7")
+sources/10 = SubResource("TileSetAtlasSource_td4uw")
+sources/11 = SubResource("TileSetAtlasSource_r5f7e")
+sources/12 = SubResource("TileSetAtlasSource_na3no")
+sources/13 = SubResource("TileSetAtlasSource_07udg")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8cye3"]
+resource_name = "#"
 texture = ExtResource("4_i2t4f")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8b0r0"]
+resource_name = "&"
 texture = ExtResource("9_2orkt")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0mnfp"]
+resource_name = "-"
+texture = ExtResource("14_mleqk")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qw2y7"]
+resource_name = ")"
+texture = ExtResource("15_6btg4")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_samc1"]
+resource_name = "<"
+texture = ExtResource("16_dtg4e")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_oaehd"]
+resource_name = "="
+texture = ExtResource("17_ut2i6")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_f8y3u"]
+resource_name = ">"
+texture = ExtResource("18_0mnfp")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0k1o5"]
+resource_name = "é"
+texture = ExtResource("19_uuqa8")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_k1ecl"]
+resource_name = "à"
+texture = ExtResource("20_samc1")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8kok0"]
+resource_name = "è"
+texture = ExtResource("21_oaehd")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lrhm2"]
+resource_name = "ù"
+texture = ExtResource("22_f8y3u")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4wtct"]
+resource_name = "_"
+texture = ExtResource("28_8kok0")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5pxul"]
+resource_name = "@"
 texture = ExtResource("7_8cye3")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fedht"]
+resource_name = "%"
 texture = ExtResource("11_8b0r0")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4c15r"]
+resource_name = "|"
 texture = ExtResource("12_v5j5c")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
@@ -90,6 +236,24 @@ texture = ExtResource("14_v7sqt")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dtg4e"]
+resource_name = "["
+texture = ExtResource("19_yjxuc")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ut2i6"]
+resource_name = "]"
+texture = ExtResource("20_hvubb")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uuqa8"]
+resource_name = "("
+texture = ExtResource("23_sl4om")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
 [sub_resource type="TileSet" id="TileSet_8b0r0"]
 tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_8cye3")
@@ -99,6 +263,19 @@ sources/3 = SubResource("TileSetAtlasSource_fedht")
 sources/4 = SubResource("TileSetAtlasSource_4c15r")
 sources/5 = SubResource("TileSetAtlasSource_ait7k")
 sources/6 = SubResource("TileSetAtlasSource_ilwjd")
+sources/7 = SubResource("TileSetAtlasSource_dtg4e")
+sources/8 = SubResource("TileSetAtlasSource_ut2i6")
+sources/9 = SubResource("TileSetAtlasSource_uuqa8")
+sources/10 = SubResource("TileSetAtlasSource_0mnfp")
+sources/11 = SubResource("TileSetAtlasSource_qw2y7")
+sources/12 = SubResource("TileSetAtlasSource_samc1")
+sources/13 = SubResource("TileSetAtlasSource_oaehd")
+sources/14 = SubResource("TileSetAtlasSource_f8y3u")
+sources/15 = SubResource("TileSetAtlasSource_0k1o5")
+sources/16 = SubResource("TileSetAtlasSource_k1ecl")
+sources/17 = SubResource("TileSetAtlasSource_8kok0")
+sources/18 = SubResource("TileSetAtlasSource_lrhm2")
+sources/19 = SubResource("TileSetAtlasSource_4wtct")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_glitch"]
 shader = ExtResource("14_glitch")
@@ -110,6 +287,8 @@ shader_parameter/time_offset = 4.475
 bg_color = Color(0.16924527, 0.16924533, 0.16924518, 1)
 corner_radius_bottom_right = 30
 corner_radius_bottom_left = 30
+shadow_color = Color(0.13319641, 0.13319641, 0.13319638, 0.6)
+shadow_size = 5
 
 [sub_resource type="SystemFont" id="SystemFont_42xju"]
 
@@ -133,7 +312,7 @@ anti_aliasing = false
 shader = ExtResource("20_42xju")
 shader_parameter/color_offset_multiplier = 0.0030000001425
 shader_parameter/black_offset_multiplier = 0.10000000149012
-shader_parameter/color_offset = 0.0010000033073799958
+shader_parameter/color_offset = 0.00100000330737999
 shader_parameter/blur_amount = 0.0
 
 [node name="Level" type="Node2D" unique_id=1108916393]
@@ -163,6 +342,8 @@ tile_set = SubResource("TileSet_8b0r0")
 [node name="Player" parent="LevelContainer" unique_id=1684674943 instance=ExtResource("4_0b4ue")]
 z_index = 1
 position = Vector2(296, 256)
+
+[node name="Robot" type="Node2D" parent="LevelContainer" unique_id=1067070017]
 
 [node name="WhistlePlayer" type="AudioStreamPlayer" parent="." unique_id=1816589424]
 volume_db = -8.23
@@ -200,8 +381,8 @@ script = ExtResource("15_glitch_mgr")
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -256.0
-offset_right = 256.0
+offset_left = -288.0
+offset_right = 288.0
 offset_bottom = 63.0
 grow_horizontal = 2
 theme_override_colors/font_shadow_color = Color(0.2901961, 0.2901961, 0.2901961, 0.7921569)
@@ -264,18 +445,15 @@ grow_vertical = 2
 color = Color(0, 0, 0, 0.7)
 
 [node name="PauseLabel" type="Label" parent="CanvasLayer/PauseMenu" unique_id=-2072745074]
+visible = false
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -152.0
-offset_top = 188.0
-offset_right = 148.0
-offset_bottom = 268.0
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -63.0
 grow_horizontal = 2
-grow_vertical = 2
+grow_vertical = 0
 theme_override_fonts/font = ExtResource("18_42xju")
 theme_override_font_sizes/font_size = 56
 text = "PAUSE"
@@ -283,12 +461,20 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ClaudeTextLabel" type="RichTextLabel" parent="CanvasLayer/PauseMenu" unique_id=264287397]
+visible = false
 z_index = 1000
-layout_mode = 0
-offset_left = 296.0
-offset_top = 64.0
-offset_right = 856.0
-offset_bottom = 448.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -192.0
+offset_right = 280.0
+offset_bottom = 192.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/default_color = Color(0, 0.49008965, 0.0037973237, 1)
 theme_override_fonts/normal_font = SubResource("SystemFont_42xju")
 theme_override_styles/normal = SubResource("StyleBoxFlat_ait7k")
@@ -297,6 +483,15 @@ scroll_following = true
 
 [node name="ColorRect" type="ColorRect" parent="CanvasLayer/PauseMenu/ClaudeTextLabel" unique_id=2067033597]
 material = SubResource("ShaderMaterial_v7sqt")
-layout_mode = 0
-offset_right = 560.0
-offset_bottom = 384.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -192.0
+offset_right = 280.0
+offset_bottom = 192.0
+grow_horizontal = 2
+grow_vertical = 2

@@ -18,6 +18,7 @@ func collect():
 	name = "UndoPickup_Collected"
 	
 	$Sprite2D.visible = false
+	$Label.visible = false
 	
 	var sound = get_node_or_null("PickupSound")
 	if sound:
@@ -28,10 +29,10 @@ func collect():
 
 func start_animation():
 	# Animation de rotation pièce SANS déplacement
-	var tween = create_tween()
-	tween.set_loops()
-	tween.tween_property($Sprite2D, "scale:x", -1.0, 0.5).set_trans(Tween.TRANS_SINE)
-	tween.tween_property($Sprite2D, "scale:x", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	#var tween = create_tween()
+	#tween.set_loops()
+	#tween.tween_property($Label, "scale:x", -1.0, 0.5).set_trans(Tween.TRANS_SINE)
+	#tween.tween_property($Label, "scale:x", 1.0, 0.5).set_trans(Tween.TRANS_SINE)
 	# Rebond vertical (optionnel)
 	var bounce_tween = create_tween()
 	bounce_tween.set_loops()

@@ -9,8 +9,24 @@ z_index = 10
 script = ExtResource("1_wuhce")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1212590445]
+visible = false
 z_index = 10
 texture = ExtResource("2_7bonr")
 
 [node name="PickupSound" type="AudioStreamPlayer2D" parent="." unique_id=1388147614]
 stream = ExtResource("3_7bonr")
+
+[node name="Label" type="Label" parent="." unique_id=2061846826]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.5
+offset_top = -17.0
+offset_right = 16.5
+offset_bottom = 17.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+text = "💖"

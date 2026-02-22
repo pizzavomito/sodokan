@@ -1,6 +1,7 @@
 class_name LevelSpawner
 
 const BOX_SCENE = preload("res://box.tscn")
+const ROBOT_SCENE = preload("res://robot.tscn")
 const TARGET_SCENE = preload("res://target.tscn")
 const TELEPORTER_SCENE = preload("res://teleporter.tscn")
 const PARTICLES_SCENE = preload("res://victory_particles.tscn")
@@ -8,6 +9,13 @@ const DOOR_SCENE = preload("res://door.tscn")
 const LIFE_PICKUP_SCENE = preload("res://life_pickup.tscn")
 const UNDO_PICKUP_SCENE = preload("res://undo_pickup.tscn")
 const SECRET_WALL_SCENE = preload("res://secret_wall.tscn")
+
+static func spawn_robot(container: Node, pos: Vector2):
+	var robot = ROBOT_SCENE.instantiate()
+	robot.name = "Robot"
+	robot.position = pos
+	robot.add_to_group("level_objects")
+	container.add_child(robot)
 
 static func spawn_box(container: Node, pos: Vector2, color: String = "red"):
 	var box = BOX_SCENE.instantiate()

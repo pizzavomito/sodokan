@@ -22,6 +22,7 @@ GameUtils="*uid://c7aldfebq4spb"
 GameMode="*uid://cbmlpqmve7dyr"
 LevelAudio="*res://level_audio.gd"
 MagnetSystem="*res://magnet_system.gd"
+SupabaseManager="*res://supabase_manager.gd"
 
 [input]
 
@@ -39,3 +40,5 @@ ui_undo={
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

@@ -1,9 +1,121 @@
 extends Node2D
 
-# Son de perte de vie
+# ─────────────────────────────────────────────────────────────────────────────
+# CHARS reconnus dans les niveaux
+# ─────────────────────────────────────────────────────────────────────────────
+# Valeur = source_id de fallback (utilisé si le TileSet n'a pas encore de
+# resource_name configuré dans l'éditeur Godot).
+# Quand les sources sont nommées, _build_source_map() prend le dessus.
+const WALL_CHARS  = {"#": 0, "&": 1, "@": 2, "%": 3, "|": 4, "_": 6, "é": 5, "à": 5, "ù": 5, "è": 5, "[": 7, "]": 8, "(": 9, "-": 10, ")": 11, "<": 12, "=": 13, ">": 14}
+const FLOOR_CHARS = {".": 0, ",": 1, ":": 9, "/": 10, "£": 11, "*": 12, "µ": 13}
+const FLOOR_RANDOM_CHARS = [";"]  # sol aléatoire (pool de tiles, pas de source fixe)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SYSTÈME DE ROTATION DES TUILES
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Deux systèmes coexistent, par ordre de priorité :
+#
+#   1. WALL_H_PATTERNS / WALL_V_PATTERNS  (priorité haute)
+#      → Séquences explicites dans la grille → transform fixe.
+#      → Idéal pour les "arches" ou cadres composés de plusieurs chars.
+#
+#   2. WALL_ROTATION_GROUPS               (fallback automatique)
+#      → Si aucun pattern n'a matché, détecte l'orientation en comptant
+#        les voisins qui appartiennent au même groupe.
+#      → Idéal pour un char isolé qu'on veut orienter automatiquement.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── 1. Transformations disponibles ───────────────────────────────────────────
+# Godot 4 encode la rotation dans le paramètre `alternative_tile` de set_cell()
+# via des bits : TRANSPOSE=16384, FLIP_H=4096, FLIP_V=8192.
+#   ROT_0   = 0
+#   ROT_90  = TRANSPOSE | FLIP_V  = 24576   (rotation horaire 90°)
+#   ROT_180 = FLIP_H   | FLIP_V  = 12288   (demi-tour)
+#   ROT_270 = TRANSPOSE | FLIP_H  = 20480   (rotation horaire 270°)
+const TRANSFORM_NONE    = 0
+const TRANSFORM_ROT_90  = 24576  # TRANSPOSE | FLIP_V
+const TRANSFORM_ROT_180 = 12288  # FLIP_H | FLIP_V
+const TRANSFORM_ROT_270 = 20480  # TRANSPOSE | FLIP_H
+
+# Conversion angle (0/90/180/270) → valeur alternative_tile, pour rot=x,y,angle
+const ANGLE_TO_TRANSFORM = {
+	0:   0,
+	90:  24576,
+	180: 12288,
+	270: 20480,
+}
+
+# ── 2. Patterns explicites (priorité haute) ───────────────────────────────────
+# Chaque entrée décrit une séquence de chars contigus et la transform à appliquer
+# à TOUTES les tuiles de cette séquence.
+#
+# WALL_H_PATTERNS : séquences lues de gauche → droite sur la même ligne.
+#
+#   Exemple :  )-(   →  rotation 180°
+#              niveau : #)---(#
+#                            ↑ le triplet )-( est détecté horizontalement,
+#                              toutes ses tuiles reçoivent TRANSFORM_ROT_180.
+#
+const WALL_H_PATTERNS = [
+	{"seq": [")", "-", "("], "transform": TRANSFORM_ROT_180},
+	{"seq": [">", "=", "<"], "transform": TRANSFORM_ROT_180},
+	# Ajouter ici d'autres séquences horizontales si nécessaire.
+]
+
+# WALL_V_PATTERNS : séquences lues de haut → bas dans la même colonne.
+#
+#   Exemple :  (    →  rotation 270°
+#              -
+#              )
+#              niveau :  #(#
+#                        #-#   ← le triplet est détecté verticalement,
+#                        #)#     toutes ses tuiles reçoivent TRANSFORM_ROT_270.
+#
+#   Note : (-) horizontal et (vertical avec - au milieu) sont deux patterns
+#          DIFFÉRENTS → ils ont chacun leur liste (H ou V).
+#
+const WALL_V_PATTERNS = [
+	{"seq": ["(", "-", ")"], "transform": TRANSFORM_ROT_270},
+	{"seq": ["<", "-", ">"], "transform": TRANSFORM_ROT_270},
+	# Ajouter ici d'autres séquences verticales si nécessaire.
+]
+
+# ── 3. Groupes de rotation automatique (fallback) ────────────────────────────
+# Si aucun pattern explicite ne s'applique, get_wall_transform() compte combien
+# de voisins du même groupe sont présents (haut/bas vs gauche/droite) pour
+# deviner l'orientation de la tuile.
+#
+# Format : {char → [liste des chars considérés "du même groupe"]}
+# Tous les chars d'un groupe doivent pointer vers la même liste.
+#
+#   Exemple : ( - ) forment un groupe "arche".
+#     Si une tuile "-" a des voisins "(" à gauche et ")" à droite
+#     → orientation horizontale → TRANSFORM_NONE (ou ROT_180 selon symétrie).
+#
+const WALL_ROTATION_GROUPS = {
+	"(": ["(", "-", ")"],
+	"-": ["(", "-", ")"],
+	")": ["(", "-", ")"],
+	"<": ["<", "=", ">"],
+	"=": ["<", "=", ">"],
+	">": ["<", "=", ">"],
+}
+
 const POP_SOUND = preload("res://sounds/pop.mp3")
 
+signal _completion_continue
+signal _name_entered
+
 var previous_boxes_on_targets = 0
+var move_count = 0
+var level_start_time = 0
+
+# Maps char → source_id, construites une fois par load_level()
+# via _build_source_map() en lisant les resource_name du TileSet.
+var wall_source_map: Dictionary = {}
+var floor_source_map: Dictionary = {}
 
 var lives = 3  # nombre de vies
 # Système Undo
@@ -48,6 +160,7 @@ func _ready():
 		get_node_or_null("BackgroundMusic")
 	)
 
+	_setup_stats_display()
 	load_level(current_level)
 	update_undos_display()
 	update_lives_display()
@@ -88,6 +201,11 @@ func save_state():
 			is_different = not boxes_same
 
 	if is_different:
+		if undo_history.size() > 0:  # Ne pas compter l'état initial
+			if move_count == 0:       # Premier move : démarre le chrono
+				level_start_time = Time.get_ticks_msec()
+			move_count += 1
+			update_moves_display()
 		undo_history.append(state)
 
 		if undo_history.size() > max_undo_steps:
@@ -147,6 +265,70 @@ func undo_move():
 
 	print("✅ Undo effectué - Undos restants : ", SaveManager.current_undos)
 
+# Construit un dict {char → source_id} en lisant le resource_name de chaque
+# source du TileSet. Il suffit de nommer les sources dans l'éditeur Godot
+# avec le char correspondant ("#", "&", ".", etc.) pour que le mapping se fasse.
+func _build_source_map(layer: TileMapLayer) -> Dictionary:
+	var result: Dictionary = {}
+	var ts = layer.tile_set
+	for i in ts.get_source_count():
+		var src_id = ts.get_source_id(i)
+		var src_name: String = ts.get_source(src_id).resource_name
+		if src_name != "":
+			result[src_name] = src_id
+	return result
+
+func compute_wall_transforms(grid: Array) -> Dictionary:
+	var map = {}
+
+	# Patterns horizontaux
+	for pattern in WALL_H_PATTERNS:
+		var seq = pattern["seq"]
+		var t = pattern["transform"]
+		for y in range(grid.size()):
+			for x in range(grid[y].length() - seq.size() + 1):
+				var ok = true
+				for i in range(seq.size()):
+					if grid[y][x + i] != seq[i]:
+						ok = false; break
+				if ok:
+					for i in range(seq.size()):
+						map[Vector2i(x + i, y)] = t
+
+	# Patterns verticaux
+	for pattern in WALL_V_PATTERNS:
+		var seq = pattern["seq"]
+		var t = pattern["transform"]
+		for y in range(grid.size() - seq.size() + 1):
+			for x in range(grid[y].length()):
+				var ok = true
+				for i in range(seq.size()):
+					if x >= grid[y + i].length() or grid[y + i][x] != seq[i]:
+						ok = false; break
+				if ok:
+					for i in range(seq.size()):
+						map[Vector2i(x, y + i)] = t
+
+	return map
+
+func get_wall_transform(char: String, grid: Array, x: int, y: int) -> int:
+	if not (char in WALL_ROTATION_GROUPS):
+		return TRANSFORM_NONE
+	var group = WALL_ROTATION_GROUPS[char]
+	var v = 0  # voisins verticaux
+	var h = 0  # voisins horizontaux
+	if y > 0 and x < grid[y - 1].length() and grid[y - 1][x] in group:
+		v += 1
+	if y < grid.size() - 1 and x < grid[y + 1].length() and grid[y + 1][x] in group:
+		v += 1
+	if x > 0 and grid[y][x - 1] in group:
+		h += 1
+	if x < grid[y].length() - 1 and grid[y][x + 1] in group:
+		h += 1
+	if v > h:
+		return TRANSFORM_ROT_90
+	return TRANSFORM_NONE
+
 func load_levels():
 	# Ouvre le fichier levels.txt ou tutorial_levels.txt selon le mode
 	var filename = "res://tutorial_levels.txt" if is_tutorial else "res://levels.txt"
@@ -154,6 +336,7 @@ func load_levels():
 	if file:
 		var content = file.get_as_text()
 		file.close()
+
 
 		# Découpe le fichier en blocs (séparés par "END")
 		var level_blocks = content.split("END")
@@ -180,7 +363,7 @@ func load_levels():
 					# Si on lit les attributs
 					if reading_attributes:
 						# Si la ligne est vide ou commence par #, fin des attributs
-						if trimmed == "" or line.begins_with("#"):
+						if trimmed == "" or (line.length() > 0 and line[0] in WALL_CHARS):
 							reading_attributes = false
 						else:
 							# Parse les attributs (format: key=value)
@@ -197,11 +380,27 @@ func load_levels():
 										if not attributes.has("glitchs"):
 											attributes["glitchs"] = []
 										attributes["glitchs"].append(_parse_glitch_config(value))
+									elif key == "rot":
+										# Format : rot=x,y,angle  (angle = 0/90/180/270)
+										if not attributes.has("rots"):
+											attributes["rots"] = []
+										var rparts = value.split(",")
+										if rparts.size() == 3:
+											attributes["rots"].append({
+												"x": int(rparts[0].strip_edges()),
+												"y": int(rparts[1].strip_edges()),
+												"angle": int(rparts[2].strip_edges()),
+											})
 									else:
 										attributes[key] = value
 							continue
-					# Garde seulement les lignes qui commencent par #
-					if line.begins_with("#") or line.begins_with("_"):
+					# Détecte le début de la section FLOORS
+					if trimmed == "FLOORS" or trimmed == "FLOORS:":
+						reading_floors = true
+						continue
+
+					# Garde seulement les lignes de grille (mur ou sol pour FLOORS)
+					if line.length() > 0 and (line[0] in WALL_CHARS or (reading_floors and (line[0] in FLOOR_CHARS or line[0] in FLOOR_RANDOM_CHARS))):
 						if reading_floors:
 							floor_lines.append(line)
 						else:
@@ -221,6 +420,8 @@ func load_level(level_index):
 
 	checking_win = false
 	previous_boxes_on_targets = 0
+	move_count = 0
+	level_start_time = Time.get_ticks_msec()
 	level_generation += 1
 
 	# Réinitialise correctement
@@ -242,9 +443,11 @@ func load_level(level_index):
 	var levelName = attributes.get("level_name", "")
 	update_level_name(levelName)
 
+	print(floor_grid)
 	# Lance le dialogue si des textes sont définis
 	var texts = attributes.get("texts", [])
 	if texts.size() > 0:
+		print("text ", texts.size)
 		start_dialog(texts)
 
 	# Réinitialise les flags des caisses radioactives
@@ -252,8 +455,15 @@ func load_level(level_index):
 		if GameUtils.is_box(node):
 			node.radioactive_checked = false
 
-	# === PASSE 1 : POSER TOUS LES SOLS ===
+	# Construit les maps char→source_id depuis les noms des sources TileSet
 	var ground_layer = container.get_node_or_null("Ground")
+	var wall_layer_for_map = container.get_node_or_null("Wall")
+	if ground_layer:
+		floor_source_map = _build_source_map(ground_layer)
+	if wall_layer_for_map:
+		wall_source_map = _build_source_map(wall_layer_for_map)
+
+	# === PASSE 1 : POSER TOUS LES SOLS ===
 	if ground_layer:
 		for y in range(element_grid.size()):
 			var line = element_grid[y]
@@ -263,27 +473,31 @@ func load_level(level_index):
 
 				# Priorité 1 : Grille FLOORS (priorité maximale)
 				if floor_grid and y < floor_grid.size() and x < floor_grid[y].length():
+					print("floor ", floor_grid[y][x])
 					floor_char = floor_grid[y][x]
 				# Priorité 2 : override_ground (force ce sol partout)
 				elif override_ground:
 					floor_char = override_ground
 				# Priorité 3 : Caractère de sol explicite dans la grille
-				elif element_char in [".", ",", ";", ":", "/"]:
+				elif element_char in FLOOR_CHARS or element_char in FLOOR_RANDOM_CHARS:
 					floor_char = element_char
 
 				# Détermine le source_id du sol
-				var source_id = 0
-				if floor_char == ",":
-					source_id = 1
-				elif floor_char == ";":
-					source_id = 2
-				elif floor_char == ":":
-					source_id = 3
-				elif floor_char == "/":
-					source_id = 4
+				var source_id: int
+				if floor_char in FLOOR_RANDOM_CHARS:
+					source_id = randi_range(5, 8)  # pool aléatoire tile_01-04
+				else:
+					source_id = floor_source_map.get(floor_char, FLOOR_CHARS.get(floor_char, 0))
 
 				# Pose le sol
 				ground_layer.set_cell(Vector2i(x, y), source_id, Vector2i(0, 0))
+
+	# Précompute les transforms de patterns explicites
+	var wall_transform_map = compute_wall_transforms(element_grid)
+
+	# Rotations manuelles (rot=x,y,angle) — écrasent le résultat automatique
+	for r in attributes.get("rots", []):
+		wall_transform_map[Vector2i(r["x"], r["y"])] = ANGLE_TO_TRANSFORM.get(r["angle"], TRANSFORM_NONE)
 
 	# === PASSE 2 : PLACER LES ÉLÉMENTS ===
 	for y in range(element_grid.size()):
@@ -291,6 +505,14 @@ func load_level(level_index):
 		for x in range(line.length()):
 			var char = line[x]
 			var pos = Vector2(x * GameUtils.TILE_SIZE, y * GameUtils.TILE_SIZE)
+
+			# Murs
+			if char in WALL_CHARS:
+				var wall_layer = container.get_node_or_null("Wall")
+				if wall_layer:
+					var wall_char = override_wall if override_wall else char
+					wall_layer.set_cell(Vector2i(x, y), wall_source_map.get(wall_char, WALL_CHARS.get(wall_char, 0)), Vector2i(0, 0), wall_transform_map.get(Vector2i(x, y), get_wall_transform(char, element_grid, x, y)))
+				continue
 
 			match char:
 				"!":  # Undo
@@ -308,23 +530,8 @@ func load_level(level_index):
 				"^":  # Vie cachée (easter egg)
 					if not SaveManager.is_life_collected(current_level):
 						LevelSpawner.spawn_hidden_life_pickup(container, pos, current_level, 0)
-
-				"#", "&", "@", "%", "|", "_":  # Murs variés
-					var wall_layer = container.get_node_or_null("Wall")
-					if wall_layer:
-						var wall_char = override_wall if override_wall else char
-						var source_id = 0
-						if wall_char == "&":
-							source_id = 1
-						elif wall_char == "@":
-							source_id = 2
-						elif wall_char == "%":
-							source_id = 3
-						elif wall_char == "|":
-							source_id = 4
-						elif wall_char == "_":
-							source_id = 6
-						wall_layer.set_cell(Vector2i(x, y), source_id, Vector2i(0, 0), 0)
+				"€":  # Robot
+					LevelSpawner.spawn_robot(container, pos)
 
 				"P":  # Joueur
 					var player = container.get_node_or_null("Player")
@@ -332,6 +539,7 @@ func load_level(level_index):
 						player.position = pos
 						player.is_moving = false
 						player.is_pushing = false
+						player.is_locked = false
 						player.input_cooldown = 0.0
 
 				"D":  # Porte
@@ -377,6 +585,8 @@ func load_level(level_index):
 	# Sauvegarde l'ÉTAT INITIAL du niveau
 	save_state()
 
+	update_moves_display()
+	_update_timer_display()
 	checking_win = true
 
 func center_level():
@@ -435,6 +645,7 @@ func _process(delta):
 	# Vérifie à chaque frame si le niveau est gagné (seulement si activé)
 	if checking_win:
 		check_win()
+		_update_timer_display()
 		
 		
 
@@ -511,7 +722,11 @@ func check_win():
 
 func player_entered_door():
 	previous_boxes_on_targets = 0
+	var elapsed_ms = (Time.get_ticks_msec() - level_start_time) if move_count > 0 else 0
 	await get_tree().create_timer(0.5).timeout
+	if not is_tutorial:
+		checking_win = false
+		await show_completion_screen(current_level, move_count, elapsed_ms)
 	next_level()
 
 func update_undos_display():
@@ -916,3 +1131,199 @@ func show_dialog_page():
 func check_tutorial_completion():
 	if is_tutorial and current_level >= levels_data.size():
 		start_dialog(["🎉 TUTORIEL TERMINÉ ! 🎉", "Appuie sur ENTRÉE pour retourner au menu."])
+
+# ========== AFFICHAGE MOVES / TIMER EN JEU ==========
+
+func _setup_stats_display() -> void:
+	var canvas = get_node_or_null("CanvasLayer")
+	if not canvas:
+		return
+
+	var moves_label = Label.new()
+	moves_label.name = "MovesLabel"
+	moves_label.position = Vector2(5, 120)
+	moves_label.text = "🎯 0"
+	canvas.add_child(moves_label)
+
+	var timer_label = Label.new()
+	timer_label.name = "TimerLabel"
+	timer_label.position = Vector2(5, 160)
+	timer_label.text = "⏱ 0.00s"
+	canvas.add_child(timer_label)
+
+func update_moves_display() -> void:
+	var lbl = get_node_or_null("CanvasLayer/MovesLabel")
+	if lbl:
+		lbl.text = "🎯 %d" % move_count
+
+func _update_timer_display() -> void:
+	var lbl = get_node_or_null("CanvasLayer/TimerLabel")
+	if lbl:
+		if move_count == 0:
+			lbl.text = "⏱ 0.00s"
+		else:
+			lbl.text = "⏱ " + _format_time(Time.get_ticks_msec() - level_start_time)
+
+# ========== ÉCRAN DE FIN DE NIVEAU + LEADERBOARD ==========
+
+func show_completion_screen(level_idx: int, moves: int, time_ms: int) -> void:
+	var canvas = get_node_or_null("CanvasLayer")
+	if not canvas:
+		return
+
+	# ── Fond semi-transparent ───────────────────────────────────────────────
+	var overlay = ColorRect.new()
+	overlay.color = Color(0.05, 0.05, 0.1, 0.88)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	canvas.add_child(overlay)
+
+	# ── Conteneur centré ────────────────────────────────────────────────────
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(420, 0)
+	center.add_child(panel)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	panel.add_child(vbox)
+
+	# ── Titre ───────────────────────────────────────────────────────────────
+	var title = Label.new()
+	title.text = "🎉  Niveau terminé !"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 22)
+	vbox.add_child(title)
+
+	vbox.add_child(HSeparator.new())
+
+	# ── Stats ────────────────────────────────────────────────────────────────
+	var stats_box = HBoxContainer.new()
+	stats_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	stats_box.add_theme_constant_override("separation", 32)
+	vbox.add_child(stats_box)
+
+	var moves_lbl = Label.new()
+	moves_lbl.text = "🎯  %d moves" % moves
+	moves_lbl.add_theme_font_size_override("font_size", 17)
+	stats_box.add_child(moves_lbl)
+
+	var time_lbl = Label.new()
+	time_lbl.text = "⏱  " + _format_time(time_ms)
+	time_lbl.add_theme_font_size_override("font_size", 17)
+	stats_box.add_child(time_lbl)
+
+	vbox.add_child(HSeparator.new())
+
+	# ── Saisie du nom (seulement si pas encore défini) ───────────────────────
+	if SaveManager.player_name == "":
+		var name_box = HBoxContainer.new()
+		name_box.alignment = BoxContainer.ALIGNMENT_CENTER
+		vbox.add_child(name_box)
+
+		var prompt_lbl = Label.new()
+		prompt_lbl.text = "Ton nom : "
+		name_box.add_child(prompt_lbl)
+
+		var name_input = LineEdit.new()
+		name_input.placeholder_text = "Joueur"
+		name_input.custom_minimum_size = Vector2(140, 0)
+		name_box.add_child(name_input)
+
+		var ok_btn = Button.new()
+		ok_btn.text = "OK"
+		name_box.add_child(ok_btn)
+
+		var _validate_name = func():
+			var n = name_input.text.strip_edges()
+			if n != "":
+				SaveManager.player_name = n
+				SaveManager.save_game()
+				name_box.visible = false
+				_name_entered.emit()
+
+		ok_btn.pressed.connect(_validate_name)
+		name_input.text_submitted.connect(func(_t): _validate_name.call())
+
+		await _name_entered
+
+	# ── Soumission + leaderboard ─────────────────────────────────────────────
+	var lb_title = Label.new()
+	lb_title.text = "Leaderboard"
+	lb_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lb_title.add_theme_font_size_override("font_size", 15)
+	vbox.add_child(lb_title)
+
+	var lb_box = VBoxContainer.new()
+	lb_box.add_theme_constant_override("separation", 3)
+	vbox.add_child(lb_box)
+
+	var status_lbl = Label.new()
+	status_lbl.text = "Envoi du score..."
+	status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lb_box.add_child(status_lbl)
+
+	if SupabaseManager.is_configured():
+		var level_name = levels_data[level_idx].get("attributes", {}).get("level_name", "")
+		SupabaseManager.submit_score(level_idx, level_name, moves, time_ms, SaveManager.player_name, SaveManager.player_id)
+		var ok = await SupabaseManager.score_submitted
+		if ok:
+			status_lbl.text = "Récupération du classement..."
+			SupabaseManager.get_leaderboard(level_idx)
+			var lb_data = await SupabaseManager.leaderboard_received
+			status_lbl.queue_free()
+			_populate_leaderboard(lb_box, lb_data, "")
+		else:
+			status_lbl.text = "⚠️ Échec de l'envoi (pas de réseau ?)"
+	else:
+		status_lbl.text = "⚙️ Supabase non configuré (voir supabase_manager.gd)"
+
+	vbox.add_child(HSeparator.new())
+
+	# ── Bouton Continuer ─────────────────────────────────────────────────────
+	var continue_btn = Button.new()
+	continue_btn.text = "Continuer →"
+	continue_btn.custom_minimum_size = Vector2(160, 38)
+	continue_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	continue_btn.pressed.connect(func(): _completion_continue.emit())
+	vbox.add_child(continue_btn)
+
+	await _completion_continue
+	overlay.queue_free()
+
+
+func _populate_leaderboard(container: VBoxContainer, entries: Array, _my_name: String) -> void:
+	if entries.is_empty():
+		var lbl = Label.new()
+		lbl.text = "(aucune entrée)"
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		container.add_child(lbl)
+		return
+
+	for i in entries.size():
+		var e = entries[i]
+		var is_me = e.get("player_id", "") == SaveManager.player_id
+		var lbl = Label.new()
+		lbl.text = "#%d  %s  —  %d mvs  —  %s%s" % [
+			i + 1,
+			e.get("player_name", "?"),
+			e.get("moves", 0),
+			_format_time(e.get("time_ms", 0)),
+			"  ←" if is_me else "",
+		]
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if is_me:
+			lbl.modulate = Color(1.0, 0.9, 0.2)
+		container.add_child(lbl)
+
+
+func _format_time(ms: int) -> String:
+	var total_s = ms / 1000
+	var minutes = total_s / 60
+	var secs    = total_s % 60
+	var centis  = (ms % 1000) / 10
+	if minutes > 0:
+		return "%dm %02ds" % [minutes, secs]
+	return "%d.%02ds" % [secs, centis]

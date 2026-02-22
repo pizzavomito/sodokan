@@ -2,6 +2,7 @@ extends Node2D
 
 var is_moving = false
 var is_pushing = false
+var is_locked = false
 var current_animation = "walk_down"
 var input_cooldown = 0.0
 var last_direction = Vector2.ZERO
@@ -17,8 +18,8 @@ func _process(delta):
 		input_cooldown -= delta
 
 func _unhandled_input(event):
-	# Bloque les inputs si le joueur bouge, pousse, ou en cooldown
-	if is_moving or is_pushing or input_cooldown > 0:
+	# Bloque les inputs si le joueur bouge, pousse, en cooldown, ou sur une porte
+	if is_moving or is_pushing or input_cooldown > 0 or is_locked:
 		return
 
 	# Détecte l'espace pour pousser une caisse
@@ -256,6 +257,7 @@ func check_door():
 
 func enter_door():
 	# Entre dans la porte et passe au niveau suivant
+	is_locked = true
 	var level = get_parent().get_parent()
 	if level:
 		level.player_entered_door()
